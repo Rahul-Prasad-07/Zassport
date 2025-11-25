@@ -8,6 +8,9 @@ pub enum ZKPassportError {
     #[msg("Unauthorized access")]
     Unauthorized,
 
+    #[msg("Unauthorized access to identity")]
+    UnauthorizedAccess,
+
     #[msg("Identity is not active")]
     IdentityNotActive,
 
@@ -28,6 +31,15 @@ pub enum ZKPassportError {
 
     #[msg("Invalid ZK proof")]
     InvalidZKProof,
+
+    #[msg("Invalid proof data")]
+    InvalidProof,
+
+    #[msg("Invalid commitment")]
+    InvalidCommitment,
+
+    #[msg("Invalid nullifier")]
+    InvalidNullifier,
 
     #[msg("Passport verification failed")]
     PassportVerificationFailed,

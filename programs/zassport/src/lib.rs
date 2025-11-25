@@ -58,4 +58,42 @@ pub mod zassport {
     pub fn cast_vote(ctx: Context<CastVote>, proposal_id: u64, vote: VoteType) -> Result<()> {
         instructions::cast_vote::cast_vote(ctx, proposal_id, vote)
     }
+
+    // Verify age proof
+    pub fn verify_age_proof(
+        ctx: Context<VerifyAgeProof>,
+        commitment: [u8; 32],
+        nullifier: [u8; 32],
+        current_timestamp: i64,
+        min_age: u64,
+        max_age: u64,
+        proof: Vec<u8>,
+    ) -> Result<()> {
+        instructions::verify_age_proof::verify_age_proof(
+            ctx,
+            commitment,
+            nullifier,
+            current_timestamp,
+            min_age,
+            max_age,
+            proof,
+        )
+    }
+
+    // Verify nationality proof
+    pub fn verify_nationality_proof(
+        ctx: Context<VerifyNationalityProof>,
+        commitment: [u8; 32],
+        nullifier: [u8; 32],
+        allowed_nationality: u64,
+        proof: Vec<u8>,
+    ) -> Result<()> {
+        instructions::verify_nationality_proof::verify_nationality_proof(
+            ctx,
+            commitment,
+            nullifier,
+            allowed_nationality,
+            proof,
+        )
+    }
 }
