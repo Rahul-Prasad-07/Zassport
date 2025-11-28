@@ -1,0 +1,8 @@
+cargo:rerun-if-changed=../../circuits/age_proof/build/circuit_js
+cargo:rerun-if-changed=../../circuits/nationality_proof/build/circuit_js
+cargo:rerun-if-changed=../../circuits/passport_verifier/build/circuit_js
+cargo:warning=Found witness for age_proof
+cargo:warning=Found witness for nationality_proof
+cargo:warning=Found witness for passport_verifier
+cargo:warning=Witness generators should be transpiled manually using rust-witness CLI
+cargo:warning=Run: rust-witness <witness_dir> for each circuit

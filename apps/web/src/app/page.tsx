@@ -3,6 +3,7 @@
 import { WalletConnectButton } from "@/components/WalletConnectButton";
 import { IdentityRegistration } from "@/components/IdentityRegistration";
 import { ZKProofGenerator } from "@/components/ZKProofGenerator";
+import { DebugInfo } from "@/components/DebugInfo";
 
 export default function Home() {
   return (
@@ -108,6 +109,8 @@ export default function Home() {
           <p className="text-sm mt-2">Privacy-Preserving Identity • Zero-Knowledge Proofs • Solana Blockchain</p>
         </div>
       </footer>
+
+      <DebugInfo />
     </div>
   );
 }

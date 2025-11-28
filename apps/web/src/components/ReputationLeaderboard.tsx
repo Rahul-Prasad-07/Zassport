@@ -1,23 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Program } from '@coral-xyz/anchor';
-import { PublicKey } from '@solana/web3.js';
+import { useProgram } from '@/hooks/useProgram';
 
 interface Identity {
   address: string;
   reputation: number;
   verifiedAt: number;
   proofsGenerated: number;
-  votescast: number;
+  votesCast: number;
 }
 
 interface ReputationLeaderboardProps {
-  program?: Program;
   currentAddress?: string;
 }
 
-export default function ReputationLeaderboard({ program, currentAddress }: ReputationLeaderboardProps) {
+export default function ReputationLeaderboard({ currentAddress }: ReputationLeaderboardProps) {
+  const program = useProgram();
   const [identities, setIdentities] = useState<Identity[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
@@ -29,35 +28,35 @@ export default function ReputationLeaderboard({ program, currentAddress }: Reput
       reputation: 985,
       verifiedAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
       proofsGenerated: 127,
-      votescast: 42,
+      votesCast: 42,
     },
     {
       address: '8wE3G5L9yO0Yu2CbN4Zq6Xd7Mi5Th0Sk9Rf3Uo2Av4W',
       reputation: 847,
       verifiedAt: Date.now() - 38 * 24 * 60 * 60 * 1000,
       proofsGenerated: 95,
-      votescast: 38,
+      votesCast: 38,
     },
     {
       address: '9xF4H6M0zP1Zv3DcO5Ar7Ye8Nj6Ui1Tl0Sg4Vp3Bw5X',
       reputation: 763,
       verifiedAt: Date.now() - 52 * 24 * 60 * 60 * 1000,
       proofsGenerated: 84,
-      votescast: 35,
+      votesCast: 35,
     },
     {
       address: '5tC1E2D3yK4Av5FdL6Bs8Zf9Oh7Pk2Qm3Rh5Wq4Cx6Y',
       reputation: 692,
       verifiedAt: Date.now() - 28 * 24 * 60 * 60 * 1000,
       proofsGenerated: 71,
-      votescast: 29,
+      votesCast: 29,
     },
     {
       address: '6uD2F3E4zL5Bw6GdM7Ct9Ag0Pi8Ql3Rn4Si6Xr5Dy7Z',
       reputation: 618,
       verifiedAt: Date.now() - 34 * 24 * 60 * 60 * 1000,
       proofsGenerated: 63,
-      votescast: 26,
+      votesCast: 26,
     },
   ];
 
@@ -66,12 +65,40 @@ export default function ReputationLeaderboard({ program, currentAddress }: Reput
   }, [program]);
 
   const loadLeaderboard = async () => {
+    if (!program) {
+      setIdentities([]);
+      return;
+    }
+
     setLoading(true);
     try {
-      // In production, fetch from blockchain
-      // const identities = await program.account.identity.all();
-      // Sort by reputation and take top 100
-      const sorted = [...mockIdentities].sort((a, b) => b.reputation - a.reputation);
+      // Fetch all identities and reputation records
+      const [identityAccounts, reputationAccounts] = await Promise.all([
+        (program.account as any).Identity.all(),
+        (program.account as any).ReputationRecord.all(),
+      ]);
+
+      // Create a map of reputation by identity pubkey
+      const reputationMap = new Map<string, any>();
+      reputationAccounts.forEach((rep: any) => {
+        reputationMap.set(rep.account.identity.toString(), rep.account);
+      });
+
+      // Combine data
+      const combinedIdentities: Identity[] = identityAccounts.map((identityAcc: any) => {
+        const identity = identityAcc.account;
+        const reputation = reputationMap.get(identityAcc.publicKey.toString());
+        return {
+          address: identity.owner.toString(),
+          reputation: reputation ? reputation.score.toNumber() : identity.reputation_score.toNumber(),
+          verifiedAt: identity.last_updated.toNumber() * 1000,
+          proofsGenerated: reputation ? reputation.contributions.toNumber() : 0,
+          votesCast: 0, // Not stored, placeholder
+        };
+      });
+
+      // Sort by reputation descending
+      const sorted = combinedIdentities.sort((a, b) => b.reputation - a.reputation);
       setIdentities(sorted);
 
       // Find current user's rank
@@ -81,6 +108,7 @@ export default function ReputationLeaderboard({ program, currentAddress }: Reput
       }
     } catch (error) {
       console.error('Error loading leaderboard:', error);
+      setIdentities([]);
     } finally {
       setLoading(false);
     }
@@ -188,7 +216,7 @@ export default function ReputationLeaderboard({ program, currentAddress }: Reput
                 <div className="col-span-2 flex items-center">
                   <div className="text-sm">
                     <div className="text-gray-300">{identity.proofsGenerated} generated</div>
-                    <div className="text-gray-500 text-xs">{identity.votescast} votes</div>
+                    <div className="text-gray-500 text-xs">{identity.votesCast} votes</div>
                   </div>
                 </div>
 

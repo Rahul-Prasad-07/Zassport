@@ -1,6 +1,7 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use crate::zk_verifier;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(commitment: [u8; 32], nullifier: [u8; 32], current_timestamp: i64, min_age: u64, max_age: u64, proof: Vec<u8>)]
@@ -39,16 +40,20 @@ pub fn verify_age_proof(
         ZKPassportError::InvalidNullifier
     );
 
-    // TODO: Implement actual Groth16 proof verification
-    // This requires integrating a Solana-compatible ZK verifier library
-    // For hackathon MVP, we'll validate proof structure
-    require!(
-        proof.len() >= 128,
-        ZKPassportError::InvalidProof
-    );
+    // Verify the Groth16 proof cryptographically
+    let is_valid = zk_verifier::verify_age_proof_groth16(
+        &proof,
+        commitment,
+        nullifier,
+        current_timestamp,
+        min_age,
+        max_age,
+    )?;
+
+    require!(is_valid, ZKPassportError::InvalidProof);
 
     msg!(
-        "Age proof verified: min_age={}, max_age={}, timestamp={}",
+        "Age proof cryptographically verified: min_age={}, max_age={}, timestamp={}",
         min_age,
         max_age,
         current_timestamp

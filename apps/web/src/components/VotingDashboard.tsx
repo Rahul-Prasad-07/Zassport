@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Program } from '@coral-xyz/anchor';
+import * as anchor from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
+import { useProgram } from '@/hooks/useProgram';
 
 interface Proposal {
   id: number;
@@ -18,11 +19,11 @@ interface Proposal {
 }
 
 interface VotingDashboardProps {
-  program?: Program;
   walletAddress?: string;
 }
 
-export default function VotingDashboard({ program, walletAddress }: VotingDashboardProps) {
+export default function VotingDashboard({ walletAddress }: VotingDashboardProps) {
+  const program = useProgram();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<number | null>(null);
@@ -73,13 +74,39 @@ export default function VotingDashboard({ program, walletAddress }: VotingDashbo
   }, [program]);
 
   const loadProposals = async () => {
+    if (!program) {
+      setProposals([]);
+      return;
+    }
+
     setLoading(true);
     try {
-      // In production, fetch from blockchain
-      // const proposals = await program.account.proposal.all();
-      setProposals(mockProposals);
+      const proposalAccounts = await (program.account as any).GovernanceProposal.all();
+      const formattedProposals: Proposal[] = proposalAccounts.map((account) => {
+        const data = account.account;
+        const now = Date.now() / 1000;
+        const status: 'active' | 'passed' | 'rejected' | 'expired' =
+          data.executed ? 'passed' :
+          now > data.votingEnds.toNumber() ? 'expired' :
+          data.yesVotes > data.noVotes ? 'passed' : 'active';
+
+        return {
+          id: data.id.toNumber(),
+          title: data.title,
+          description: data.description,
+          proposer: data.creator.toString(),
+          options: ['Yes', 'No'],
+          votes: [data.yesVotes.toNumber(), data.noVotes.toNumber()],
+          totalVotes: data.yesVotes.toNumber() + data.noVotes.toNumber(),
+          startTime: data.createdAt.toNumber() * 1000,
+          endTime: data.votingEnds.toNumber() * 1000,
+          status,
+        };
+      });
+      setProposals(formattedProposals);
     } catch (error) {
       console.error('Error loading proposals:', error);
+      setProposals([]);
     } finally {
       setLoading(false);
     }
@@ -92,13 +119,11 @@ export default function VotingDashboard({ program, walletAddress }: VotingDashbo
     }
 
     try {
+      const voteType = optionIndex === 0 ? { yes: {} } : { no: {} };
+
       // Call cast_vote instruction
       const tx = await program.methods
-        .castVote(proposalId, optionIndex)
-        .accounts({
-          voter: new PublicKey(walletAddress),
-          // Add other required accounts
-        })
+        .castVote(new anchor.BN(proposalId), voteType)
         .rpc();
 
       alert('Vote cast successfully! TX: ' + tx);

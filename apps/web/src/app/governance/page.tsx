@@ -1,19 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import ProposalCreator from '@/components/ProposalCreator';
 import VotingDashboard from '@/components/VotingDashboard';
 import ReputationLeaderboard from '@/components/ReputationLeaderboard';
+import { WalletConnectButton } from '@/components/WalletConnectButton';
 
 export default function GovernancePage() {
   const [activeTab, setActiveTab] = useState<'vote' | 'create' | 'leaderboard'>('vote');
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-
-  const handleConnectWallet = async () => {
-    // Mock wallet connection
-    // In production, use Solana wallet adapter
-    setWalletAddress('7vD2F4K8xN9Xt1BaM3Yp5Wc6Lh4Sg9Rj8Qe2Tn1Zu3V');
-  };
+  const { publicKey, connected } = useWallet();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900">
@@ -29,23 +25,18 @@ export default function GovernancePage() {
               </div>
             </div>
 
-            {walletAddress ? (
+            {connected && publicKey ? (
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-xs text-gray-400">Connected</p>
                   <p className="text-sm text-white font-mono">
-                    {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
+                    {publicKey.toString().slice(0, 4)}...{publicKey.toString().slice(-4)}
                   </p>
                 </div>
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               </div>
             ) : (
-              <button
-                onClick={handleConnectWallet}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
-              >
-                Connect Wallet
-              </button>
+              <WalletConnectButton />
             )}
           </div>
         </div>
@@ -89,13 +80,13 @@ export default function GovernancePage() {
         {/* Content */}
         <div className="pb-12">
           {activeTab === 'vote' && (
-            <VotingDashboard walletAddress={walletAddress || undefined} />
+            <VotingDashboard walletAddress={publicKey?.toString()} />
           )}
           {activeTab === 'create' && (
-            <ProposalCreator walletAddress={walletAddress || undefined} />
+            <ProposalCreator walletAddress={publicKey?.toString()} />
           )}
           {activeTab === 'leaderboard' && (
-            <ReputationLeaderboard currentAddress={walletAddress || undefined} />
+            <ReputationLeaderboard currentAddress={publicKey?.toString()} />
           )}
         </div>
       </div>

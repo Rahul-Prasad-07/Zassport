@@ -43,4 +43,22 @@ pub enum ZKPassportError {
 
     #[msg("Passport verification failed")]
     PassportVerificationFailed,
+
+    #[msg("Invalid verification key")]
+    InvalidVerificationKey,
+
+    #[msg("Proof verification failed")]
+    ProofVerificationFailed,
+
+    #[msg("Missing ed25519 signature instruction")] 
+    MissingEd25519Instruction,
+
+    #[msg("Invalid attestation message")] 
+    InvalidAttestationMessage,
+
+    #[msg("Invalid verifier public key")] 
+    InvalidVerifier,
+
+    #[msg("Attestation expired or not yet valid")] 
+    AttestationTimestampInvalid,
 }

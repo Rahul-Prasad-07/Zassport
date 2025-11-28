@@ -1,0 +1,125 @@
+Streaming transaction logs mentioning FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ. Confirmed commitment
+Transaction executed in slot 2:
+  Signature: 5CzR9BDBnWp1NmhvSR7Pyo1pRTDS67kW594t6aetTHjG5PAwY9taxe8aBdErvnbuTxygq6bScX4febQDGPEZJJNT
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: InitializeProgram
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: ZKPassport program initialized successfully
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 6788 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 3:
+  Signature: 26HVtZ9hoq53ysRYeegAsmMd8d4vy4AiApKv3uSo89A2Mkg8D5XhoLxNLbzY966pXr8Tk3xNrty1V5SF5JHCGAsZ
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: InitializeVerifierConfig
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 9795 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 3:
+  Signature: YuKjjUNsKVzVV8dHo8fkQom1oZa887tnkR2bVxaTdKx7HckQR9XFzmNFFYybFuQRwj2NZXkPMW1iPBozsrnXVNx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: RegisterIdentity
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Identity registered successfully with commitment: [36, 179, 208, 81, 102, 182, 76, 14, 84, 1, 167, 80, 245, 98, 182, 227, 128, 161, 158, 126, 20, 31, 200, 176, 149, 56, 191, 217, 183, 229, 36, 246]
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 25768 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 4:
+  Signature: YuKjjUNsKVzVV8dHo8fkQom1oZa887tnkR2bVxaTdKx7HckQR9XFzmNFFYybFuQRwj2NZXkPMW1iPBozsrnXVNx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: RegisterIdentity
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Identity registered successfully with commitment: [36, 179, 208, 81, 102, 182, 76, 14, 84, 1, 167, 80, 245, 98, 182, 227, 128, 161, 158, 126, 20, 31, 200, 176, 149, 56, 191, 217, 183, 229, 36, 246]
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 25768 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 4:
+  Signature: 2tgrSQVb3fS8h7DHqaMJ3GnDVM3bQjpQ5FZbLAxXdcH9hYaoi42Jr2s6WpqwZoRyXX7vREgp2geFVCs8XgCTBJHx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: AttestAge
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 7188 of 203000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 5:
+  Signature: 2tgrSQVb3fS8h7DHqaMJ3GnDVM3bQjpQ5FZbLAxXdcH9hYaoi42Jr2s6WpqwZoRyXX7vREgp2geFVCs8XgCTBJHx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: AttestAge
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 7188 of 203000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 6:
+  Signature: 5PkWLQcazTQi1RBdbRpTBBHFbwPmatSMhV5frVNn8U3tae1KvLhf5D3zZ2PjCzEsk82x3tuCo547bewEPcXsJWp2
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: AttestNationality
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 7192 of 203000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 6:
+  Signature: 2gLmifrsupe8qX8SYvaPXgbvGhqnyLsVd6f6bGqbtBk4a25xK653wpvjnyiyuP7TmzoAZfMGHgP9BJcBHwWVo4EL
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: CreateProposal
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Proposal 1764350197 created: Test Governance Proposal
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 13452 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 7:
+  Signature: 2gLmifrsupe8qX8SYvaPXgbvGhqnyLsVd6f6bGqbtBk4a25xK653wpvjnyiyuP7TmzoAZfMGHgP9BJcBHwWVo4EL
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: CreateProposal
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Proposal 1764350197 created: Test Governance Proposal
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 13452 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 7:
+  Signature: 4u9zQ2rxKsQJnkvBUVFarQQMHmMhx9bHrK7tcrWecrynToLxxuxAKf87xi9LMQm9ffUrMu8a1iH3F6huH7Hyq8Lx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: CastVote
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Vote cast for proposal 1764350197: Yes
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 13635 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 8:
+  Signature: 4u9zQ2rxKsQJnkvBUVFarQQMHmMhx9bHrK7tcrWecrynToLxxuxAKf87xi9LMQm9ffUrMu8a1iH3F6huH7Hyq8Lx
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: CastVote
+    Program 11111111111111111111111111111111 invoke [2]
+    Program 11111111111111111111111111111111 success
+    Program log: Vote cast for proposal 1764350197: Yes
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 13635 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success
+Transaction executed in slot 9:
+  Signature: 3pD9NvQ3gCsN1qVSyNYgVPKrvVM8VCkFmdJX1fGekmxi8oFd3bv3iXT4U42kfMsrMEiGmHxen5yzwcN8PE2Jyxab
+  Status: Ok
+  Log Messages:
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ invoke [1]
+    Program log: Instruction: UpdateReputation
+    Program log: Reputation updated by 50 points. New score: 50
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ consumed 6988 of 200000 compute units
+    Program FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ success

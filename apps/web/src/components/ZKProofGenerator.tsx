@@ -2,17 +2,26 @@
 
 import { useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import * as anchor from '@coral-xyz/anchor';
+import { Buffer } from 'buffer';
 import { 
   getTestPassportData, 
   parsePassportForZK, 
   calculateAgeFromYYMMDD 
 } from '@/lib/passportParser';
+import { generateAgeProof, generateNationalityProof, formatProofForChain } from '@/lib/zkProofsReal';
+import { useProgram } from '@/hooks/useProgram';
+import { getIdentityPDA } from '@/lib/anchor';
+import { getNationalityCode, bigintTo32BytesBE } from '@/lib/zkProofsReal';
 
 export function ZKProofGenerator() {
   const { publicKey, connected } = useWallet();
+  const program = useProgram();
   const [proofType, setProofType] = useState<'age' | 'nationality' | 'passport'>('age');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<string>('');
+  const [proofResult, setProofResult] = useState<any>(null);
+  const [lastPassportData, setLastPassportData] = useState<any>(null);
 
   const generateProof = async () => {
     if (!connected) {
@@ -22,71 +31,65 @@ export function ZKProofGenerator() {
 
     setGenerating(true);
     setResult('');
+    setProofResult(null);
 
     try {
       // Get test passport data
       const passportData = getTestPassportData();
+      setLastPassportData(passportData);
       const parsedData = parsePassportForZK(passportData);
 
       // Calculate current timestamp
       const currentTimestamp = Math.floor(Date.now() / 1000);
 
       if (proofType === 'age') {
-        // Generate age proof for 18-120 years
-        const age = calculateAgeFromYYMMDD(passportData.dateOfBirth);
+        // Generate real age proof
+        const proof = await generateAgeProof(passportData);
+        setProofResult(proof);
         
         setResult(`
-Age Proof Generated Successfully!
+✅ Age Proof Generated Successfully!
 
-Current Age: ${age} years
-Proof Type: Zero-Knowledge Age Range Verification
-Range: 18-120 years
+📊 Proof Details:
+- Commitment: ${proof.commitment.slice(0, 16)}...
+- Nullifier: ${proof.nullifier.slice(0, 16)}...
+- Age Verified: 18+
+- Proof Size: ${JSON.stringify(proof.proof).length} bytes
 
-Public Inputs:
-- Commitment: [Hidden]
-- Nullifier: [Hidden]
-- Current Timestamp: ${currentTimestamp}
-- Min Age: 18
-- Max Age: 120
+🔒 Privacy: Your exact date of birth remains hidden
+⚡ Status: Ready for on-chain verification
 
-Status: ✅ Proof Valid
-Privacy: Your exact date of birth remains hidden
-
-Next: Submit this proof to Solana for on-chain verification
+${program ? 'Click "Verify Proof On-Chain" to submit to Solana' : '⚠️ On-chain verification requires program initialization'}
         `);
       } else if (proofType === 'nationality') {
+        // Generate real nationality proof
+        const proof = await generateNationalityProof(passportData, passportData.nationality);
+        // retain allowed nationality for verification
+        const allowedNationality = getNationalityCode(passportData.nationality);
+        setProofResult({ ...proof, allowedNationality });
+        
         setResult(`
-Nationality Proof Generated Successfully!
+✅ Nationality Proof Generated Successfully!
 
-Nationality: ${passportData.nationality}
-Proof Type: Zero-Knowledge Citizenship Verification
+📊 Proof Details:
+- Commitment: ${proof.commitment.slice(0, 16)}...
+- Nullifier: ${proof.nullifier.slice(0, 16)}...
+- Nationality: ${passportData.nationality}
+- Proof Size: ${JSON.stringify(proof.proof).length} bytes
 
-Public Inputs:
-- Commitment: [Hidden]
-- Nullifier: [Hidden]
-- Allowed Nationality: ${passportData.nationality}
+🔒 Privacy: Your nationality data remains private
+⚡ Status: Ready for on-chain verification
 
-Status: ✅ Proof Valid
-Privacy: Your nationality remains private
-
-Next: Submit this proof to Solana for on-chain verification
+${program ? 'Click "Verify Proof On-Chain" to submit to Solana' : '⚠️ On-chain verification requires program initialization'}
         `);
       } else {
         setResult(`
-Passport Proof Generated Successfully!
+❌ Passport Proof Not Yet Implemented
 
-Document Number: ${passportData.documentNumber}
-Proof Type: Zero-Knowledge Passport Authentication
+The passport verification circuit is still under development.
+Currently available: Age and Nationality proofs.
 
-Public Inputs:
-- Commitment: [Hidden]
-- Nullifier: [Hidden]
-- Passport Number: ${passportData.documentNumber}
-
-Status: ✅ Proof Valid
-Privacy: Your passport details remain hidden
-
-Next: Submit this proof to Solana for on-chain verification
+Please select Age or Nationality proof type.
         `);
       }
     } catch (error) {
@@ -95,6 +98,85 @@ Next: Submit this proof to Solana for on-chain verification
     } finally {
       setGenerating(false);
     }
+  };
+
+  const verifyProofOnChain = async (proofData: any, type: string) => {
+    if (!program || !publicKey) {
+      return '❌ Program not initialized or wallet not connected. Please ensure your wallet is connected and the program is deployed.';
+    }
+
+    try {
+      // Convert commitment and nullifier using big-endian 32-byte packing
+      const commitmentBytes = bigintTo32BytesBE(proofData.commitment);
+      const nullifierBytes = bigintTo32BytesBE(proofData.nullifier);
+
+      const proofObject = formatProofForChain(proofData.proof);
+      const proofBytes = Buffer.from(JSON.stringify(proofObject));
+
+      const identityPda = getIdentityPDA(publicKey);
+
+      if (type === 'age') {
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        const minAge = 18;
+        const maxAge = 120;
+
+        const tx = await program.methods
+          .verifyAgeProof(
+            commitmentBytes,
+            nullifierBytes,
+            new anchor.BN(currentTimestamp),
+            new anchor.BN(minAge),
+            new anchor.BN(maxAge),
+            proofBytes
+          )
+          .accounts({
+            identity: identityPda,
+            user: publicKey,
+          })
+          .rpc();
+
+        return `✅ On-chain verification successful! TX: ${tx.slice(0, 8)}...`;
+      } else if (type === 'nationality') {
+        const allowedNationality = proofData.allowedNationality ?? (lastPassportData ? getNationalityCode(lastPassportData.nationality) : 0);
+        const tx = await program.methods
+          .verifyNationalityProof(
+            commitmentBytes,
+            nullifierBytes,
+            new anchor.BN(allowedNationality),
+            proofBytes
+          )
+          .accounts({
+            identity: identityPda,
+            user: publicKey,
+          })
+          .rpc();
+
+        return `✅ On-chain verification successful! TX: ${tx.slice(0, 8)}...`;
+      }
+    } catch (error) {
+      console.error('On-chain verification failed:', error);
+      return `❌ On-chain verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+    return null;
+  };
+
+  const handleVerifyOnChain = async () => {
+    if (!proofResult) {
+      setResult('No proof available. Generate a proof first.');
+      return;
+    }
+
+    setGenerating(true);
+    setResult('Submitting proof for on-chain verification...');
+
+    const verificationResult = await verifyProofOnChain(proofResult, proofType);
+    if (verificationResult) {
+      setResult(verificationResult);
+    } else {
+      setResult('❌ Verification type not supported yet');
+    }
+
+    setGenerating(false);
   };
 
   return (
@@ -153,6 +235,35 @@ Next: Submit this proof to Solana for on-chain verification
             'Generate ZK Proof'
           )}
         </button>
+
+        {proofResult && program && (
+          <button
+            onClick={handleVerifyOnChain}
+            disabled={!connected || generating}
+            className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed"
+          >
+            {generating ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying On-Chain...
+              </span>
+            ) : (
+              'Verify Proof On-Chain'
+            )}
+          </button>
+        )}
+
+        {proofResult && !program && (
+          <div className="p-4 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
+            <p className="text-sm text-yellow-300">
+              ⚠️ On-chain verification is not available. The smart contract program could not be initialized. 
+              Make sure you're connected to Solana devnet.
+            </p>
+          </div>
+        )}
 
         {!connected && (
           <p className="text-sm text-yellow-400 text-center">

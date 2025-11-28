@@ -1,0 +1,1 @@
+cargo:rerun-if-env-changed=CIRCOM_PROVER_TEST_WITNESS

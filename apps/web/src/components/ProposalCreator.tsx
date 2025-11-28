@@ -1,38 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Program, AnchorProvider } from '@coral-xyz/anchor';
+import * as anchor from '@coral-xyz/anchor';
+import { useProgram } from '@/hooks/useProgram';
 
 interface ProposalCreatorProps {
-  program?: Program;
   walletAddress?: string;
 }
 
-export default function ProposalCreator({ program, walletAddress }: ProposalCreatorProps) {
+export default function ProposalCreator({ walletAddress }: ProposalCreatorProps) {
+  const program = useProgram();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [options, setOptions] = useState(['', '']);
   const [duration, setDuration] = useState(7);
   const [isCreating, setIsCreating] = useState(false);
-
-  const addOption = () => {
-    if (options.length < 5) {
-      setOptions([...options, '']);
-    }
-  };
-
-  const updateOption = (index: number, value: string) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
-  };
-
-  const removeOption = (index: number) => {
-    if (options.length > 2) {
-      setOptions(options.filter((_, i) => i !== index));
-    }
-  };
 
   const handleCreate = async () => {
     if (!program || !walletAddress) {
@@ -40,20 +21,21 @@ export default function ProposalCreator({ program, walletAddress }: ProposalCrea
       return;
     }
 
-    if (!title || !description || options.some(opt => !opt.trim())) {
+    if (!title || !description) {
       alert('Please fill in all fields');
       return;
     }
 
     setIsCreating(true);
     try {
+      // Get next proposal ID
+      const proposalAccounts = await (program.account as any).GovernanceProposal.all();
+      const maxId = proposalAccounts.length > 0 ? Math.max(...proposalAccounts.map((p: any) => p.account.id.toNumber())) : 0;
+      const proposalId = maxId + 1;
+
       // Call create_proposal instruction
       const tx = await program.methods
-        .createProposal(title, description, options, duration * 24 * 60 * 60)
-        .accounts({
-          proposer: new PublicKey(walletAddress),
-          // Add other required accounts
-        })
+        .createProposal(new anchor.BN(proposalId), title, description, new anchor.BN(duration * 24 * 60 * 60))
         .rpc();
 
       alert('Proposal created successfully! TX: ' + tx);
@@ -61,7 +43,6 @@ export default function ProposalCreator({ program, walletAddress }: ProposalCrea
       // Reset form
       setTitle('');
       setDescription('');
-      setOptions(['', '']);
       setDuration(7);
     } catch (error) {
       console.error('Error creating proposal:', error);
@@ -101,39 +82,6 @@ export default function ProposalCreator({ program, walletAddress }: ProposalCrea
         </div>
 
         <div>
-          <label className="block text-gray-300 mb-2 font-medium">Voting Options</label>
-          <div className="space-y-2">
-            {options.map((option, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={option}
-                  onChange={(e) => updateOption(index, e.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                  className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                {options.length > 2 && (
-                  <button
-                    onClick={() => removeOption(index)}
-                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
-            {options.length < 5 && (
-              <button
-                onClick={addOption}
-                className="text-purple-400 hover:text-purple-300 text-sm font-medium"
-              >
-                + Add Option
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div>
           <label className="block text-gray-300 mb-2 font-medium">Voting Duration (days)</label>
           <div className="flex items-center gap-4">
             <input
@@ -166,7 +114,7 @@ export default function ProposalCreator({ program, walletAddress }: ProposalCrea
 
         <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
           <p className="text-sm text-gray-400">
-            <strong className="text-gray-300">Note:</strong> Creating a proposal requires a minimum reputation score.
+            <strong className="text-gray-300">Note:</strong> Proposals are voted Yes/No. Creating a proposal requires an active identity.
             Your vote weight is proportional to your reputation in the system.
           </p>
         </div>

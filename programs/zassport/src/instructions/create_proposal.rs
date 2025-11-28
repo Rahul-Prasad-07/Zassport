@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(proposal_id: u64, title: String, description: String, voting_period: i64)]
@@ -38,7 +38,10 @@ pub fn create_proposal(
     let current_time = Clock::get()?.unix_timestamp;
 
     require!(title.len() <= 200, ZKPassportError::TitleTooLong);
-    require!(description.len() <= 1000, ZKPassportError::DescriptionTooLong);
+    require!(
+        description.len() <= 1000,
+        ZKPassportError::DescriptionTooLong
+    );
     require!(voting_period > 0, ZKPassportError::InvalidVotingPeriod);
 
     proposal.id = proposal_id;

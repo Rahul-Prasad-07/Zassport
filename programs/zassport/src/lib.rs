@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
 
-pub mod state;
-pub mod instructions;
 pub mod errors;
+pub mod instructions;
+pub mod state;
+pub mod zk_verifier;
 
+use errors::*;
 use instructions::*;
 use state::*;
-use errors::*;
 
-declare_id!("5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V");
+declare_id!("FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ");
 
 #[program]
 pub mod zassport {
@@ -51,7 +52,13 @@ pub mod zassport {
         description: String,
         voting_period: i64,
     ) -> Result<()> {
-        instructions::create_proposal::create_proposal(ctx, proposal_id, title, description, voting_period)
+        instructions::create_proposal::create_proposal(
+            ctx,
+            proposal_id,
+            title,
+            description,
+            voting_period,
+        )
     }
 
     // Cast vote on proposal
@@ -94,6 +101,41 @@ pub mod zassport {
             nullifier,
             allowed_nationality,
             proof,
+        )
+    }
+
+    // Initialize verifier configuration (trusted off-chain signer)
+    pub fn initialize_verifier_config(
+        ctx: Context<InitializeVerifierConfig>,
+        verifier: Pubkey,
+    ) -> Result<()> {
+        instructions::set_verifier::initialize_verifier_config(ctx, verifier)
+    }
+
+    // Update verifier public key (authority only)
+    pub fn update_verifier(ctx: Context<UpdateVerifier>, new_verifier: Pubkey) -> Result<()> {
+        instructions::set_verifier::update_verifier(ctx, new_verifier)
+    }
+
+    // Off-chain attestation: Age
+    pub fn attest_age(
+        ctx: Context<AttestAge>,
+        min_age: u64,
+        timestamp: i64,
+    ) -> Result<()> {
+        instructions::attest_age_proof::attest_age(ctx, min_age, timestamp)
+    }
+
+    // Off-chain attestation: Nationality
+    pub fn attest_nationality(
+        ctx: Context<AttestNationality>,
+        allowed_nationality: u64,
+        timestamp: i64,
+    ) -> Result<()> {
+        instructions::attest_nationality_proof::attest_nationality(
+            ctx,
+            allowed_nationality,
+            timestamp,
         )
     }
 }

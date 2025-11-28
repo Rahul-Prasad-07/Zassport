@@ -5,61 +5,122 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
+import { generateAgeProof, bigintTo32BytesBE } from '@/lib/zkProofsReal';
+import { useProgram } from '@/hooks/useProgram';
+import { getNullifierRegistryPDA, PROGRAM_ID } from '@/lib/anchor';
+
+interface PassportData {
+  surname: string;
+  givenNames: string;
+  nationality: string;
+  documentNumber: string;
+  dateOfBirth: string;
+  expiryDate: string;
+  issuingCountry: string;
+}
 
 export function IdentityRegistration() {
-  const { publicKey, signTransaction } = useWallet();
+  const { publicKey } = useWallet();
   const { connection } = useConnection();
+  const program = useProgram();
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string>('');
+  const [passportData, setPassportData] = useState<PassportData>({
+    surname: '',
+    givenNames: '',
+    nationality: '',
+    documentNumber: '',
+    dateOfBirth: '',
+    expiryDate: '',
+    issuingCountry: '',
+  });
+
+  const handleInputChange = (field: keyof PassportData, value: string) => {
+    setPassportData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleRegisterIdentity = async () => {
-    if (!publicKey || !signTransaction) {
+    if (!publicKey) {
       setStatus('Please connect your wallet first');
       return;
     }
 
+    if (!program) {
+      setStatus('⚠️ Smart contract program not initialized. Please ensure you are connected to Solana devnet and the program is deployed at: 5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V');
+      return;
+    }
+
+    // Validate passport data
+    if (!passportData.documentNumber || !passportData.dateOfBirth || !passportData.nationality) {
+      setStatus('Please fill in all required passport fields');
+      return;
+    }
+
     setIsLoading(true);
-    setStatus('Registering identity...');
+    setStatus('Generating ZK proof...');
 
     try {
-      // For demo purposes, we'll use mock commitment and nullifier
-      // In production, this would come from ZK proof generation
-      const commitment = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
-      const nullifier = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
+      // Ensure nullifier registry account is initialized
+      const registryPda = getNullifierRegistryPDA(PROGRAM_ID);
+      const existing = await connection.getAccountInfo(registryPda);
+      if (!existing) {
+        setStatus('Initializing registry on-chain...');
+        await program.methods
+          .initializeProgram()
+          .accounts({
+            nullifierRegistry: registryPda,
+            authority: publicKey,
+          })
+          .rpc();
+      }
 
-      // Program ID from Anchor.toml
-      const programId = new PublicKey('5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V');
+      // Generate ZK proof for age verification (18+)
+      const proofResult = await generateAgeProof(passportData);
+      
+      setStatus('Submitting proof to blockchain...');
 
-      // Create PDAs
-      const [identityPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("identity"), publicKey.toBuffer()],
-        programId
-      );
+      // Convert to 32-byte big-endian arrays matching on-chain expectation
+      const commitmentBytes = bigintTo32BytesBE(proofResult.commitment);
+      const nullifierBytes = bigintTo32BytesBE(proofResult.nullifier);
 
-      const [reputationPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("reputation"), identityPda.toBuffer()],
-        programId
-      );
+      // Call registerIdentity instruction
+      const tx = await program.methods
+        .registerIdentity(commitmentBytes, nullifierBytes)
+        .accounts({
+          user: publicKey,
+          nullifierRegistry: registryPda,
+        })
+        .rpc();
 
-      const [nullifierRegistryPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("nullifier_registry")],
-        programId
-      );
+      setStatus(`✅ Identity registered successfully! TX: ${tx.slice(0, 8)}...`);
 
-      // Create Anchor provider
-      const provider = new anchor.AnchorProvider(
-        connection,
-        { publicKey, signTransaction } as any,
-        { commitment: 'confirmed' }
-      );
+      // Debug: fetch on-chain identity and compare stored commitment/nullifier
+      try {
+        const identityPda = getIdentityPDA(publicKey);
+        // fetchNullable returns null if not initialized
+        const onchain = await program.account.identity.fetchNullable(identityPda);
+        if (onchain) {
+          const onchainCommitment = Buffer.from(onchain.commitment).toString('hex');
+          const onchainNullifier = Buffer.from(onchain.nullifier).toString('hex');
+          const expectedCommitment = Buffer.from(commitmentBytes).toString('hex');
+          const expectedNullifier = Buffer.from(nullifierBytes).toString('hex');
 
-      // For now, we'll use a simple approach - in production you'd load the full IDL
-      // This is a simplified version for demo purposes
-      setStatus('Identity registration simulation completed! (Full implementation coming with ZK proofs)');
+          console.log('On-chain identity:', { onchainCommitment, onchainNullifier });
+          console.log('Expected (client):', { expectedCommitment, expectedNullifier });
+
+          if (onchainCommitment !== expectedCommitment || onchainNullifier !== expectedNullifier) {
+            setStatus(prev => prev + '\n\n⚠️ Warning: on-chain commitment/nullifier do not match client values. See console for hex output. You may need to re-register.');
+          } else {
+            setStatus(prev => prev + '\n\n✅ On-chain commitment matches client commitment.');
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch/compare on-chain identity:', err);
+      }
 
     } catch (error: any) {
       console.error('Registration failed:', error);
-      setStatus(`Registration failed: ${error.message}`);
+      setStatus(`❌ Registration failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -76,10 +137,91 @@ export function IdentityRegistration() {
         </p>
       </div>
 
+      {/* Passport Data Input Form */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h4 className="font-medium text-gray-900 mb-4">Enter Your Passport Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Surname *
+            </label>
+            <input
+              type="text"
+              value={passportData.surname}
+              onChange={(e) => handleInputChange('surname', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="ERIKSSON"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Given Names *
+            </label>
+            <input
+              type="text"
+              value={passportData.givenNames}
+              onChange={(e) => handleInputChange('givenNames', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="ANNA MARIA"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nationality *
+            </label>
+            <input
+              type="text"
+              value={passportData.nationality}
+              onChange={(e) => handleInputChange('nationality', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="SWE"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Document Number *
+            </label>
+            <input
+              type="text"
+              value={passportData.documentNumber}
+              onChange={(e) => handleInputChange('documentNumber', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="L898902C3"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date of Birth *
+            </label>
+            <input
+              type="date"
+              value={passportData.dateOfBirth}
+              onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Expiry Date
+            </label>
+            <input
+              type="date"
+              value={passportData.expiryDate}
+              onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          * Required fields. Your data is processed locally and never stored.
+        </p>
+      </div>
+
       <div className="bg-gray-50 rounded-lg p-6">
         <h4 className="font-medium text-gray-900 mb-3">What happens when you register:</h4>
         <ul className="space-y-2 text-sm text-gray-600">
           <li>• Your passport data is processed locally on your device</li>
+          <li>• Zero-knowledge proof is generated to verify age (18+)</li>
           <li>• Only cryptographic commitments are stored on Solana</li>
           <li>• Your personal information remains completely private</li>
           <li>• You gain access to governance and reputation features</li>
@@ -98,7 +240,7 @@ export function IdentityRegistration() {
 
       {status && (
         <div className={`text-center p-4 rounded-lg ${
-          status.includes('failed') || status.includes('connect')
+          status.includes('❌') || status.includes('failed') || status.includes('connect')
             ? 'bg-red-50 text-red-700 border border-red-200'
             : 'bg-green-50 text-green-700 border border-green-200'
         }`}>

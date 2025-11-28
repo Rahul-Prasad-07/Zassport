@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(proposal_id: u64, vote: VoteType)]
@@ -36,11 +36,7 @@ pub struct CastVote<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn cast_vote(
-    ctx: Context<CastVote>,
-    proposal_id: u64,
-    vote: VoteType,
-) -> Result<()> {
+pub fn cast_vote(ctx: Context<CastVote>, proposal_id: u64, vote: VoteType) -> Result<()> {
     let proposal = &mut ctx.accounts.proposal;
     let vote_record = &mut ctx.accounts.vote_record;
 

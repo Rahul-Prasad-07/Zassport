@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(commitment: [u8; 32], nullifier: [u8; 32])]
@@ -70,6 +70,9 @@ pub fn register_identity(
     reputation_record.last_contribution = Clock::get()?.unix_timestamp;
     reputation_record.bump = ctx.bumps.reputation_record;
 
-    msg!("Identity registered successfully with commitment: {:?}", commitment);
+    msg!(
+        "Identity registered successfully with commitment: {:?}",
+        commitment
+    );
     Ok(())
 }
