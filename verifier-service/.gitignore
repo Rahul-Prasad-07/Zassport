@@ -1,0 +1,4 @@
+.env
+verifier-keypair.json
+node_modules/
+*.log

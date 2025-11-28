@@ -1,14 +1,19 @@
-# Zassport: Privacy-Preserving Passport Verification
+# Zassport - Zero-Knowledge Passport Verification on Solana
 
-[![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana)](https://explorer.solana.com/address/5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V?cluster=devnet)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Circom](https://img.shields.io/badge/Circom-v2.1.6-purple)](https://github.com/iden3/circom)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana)](https://explorer.solana.com/address/FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ?cluster=devnet)
+[![Tests](https://img.shields.io/badge/Tests-10%20Passing-success)](./tests)
+[![License](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
-> **Network School Zcash Hackathon Submission** - Privacy-preserving identity verification using zero-knowledge proofs on Solana
+Complete ZK passport verification system with **off-chain proof verification** and **on-chain attestations** using Ed25519 signatures.
 
-## 🎯 Overview
+## 🎯 What This Does
 
-Zassport is a decentralized identity verification system that enables users to prove facts about their passport (age, nationality, document validity) without revealing sensitive personal information. Built on Solana with Circom ZK circuits, it combines the security of blockchain with privacy-first cryptography.
+Zassport enables privacy-preserving passport verification on Solana:
+- **Zero-Knowledge Proofs**: Prove age/nationality without revealing passport data
+- **Off-Chain Verification**: Verifier service validates ZK proofs using snarkjs
+- **On-Chain Attestations**: Trusted verifier signs attestations, validated on Solana
+- **Identity System**: Register identities with Poseidon commitments & nullifiers
+- **Governance**: Reputation-weighted voting for protocol decisions
 
 ### Key Features
 
@@ -21,33 +26,125 @@ Zassport is a decentralized identity verification system that enables users to p
 ## 🏗️ Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Mobile App     │────▶│  ZK Circuit      │────▶│  Solana Chain   │
-│  (React Native) │     │  (Circom)        │     │  (Anchor)       │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-        │                       │                          │
-        │                       ▼                          ▼
-    NFC Scan            Proof Generation          On-Chain Verification
-    Passport            (Groth16)                 Smart Contracts
+┌─────────────┐      ┌──────────────────┐      ┌─────────────────┐
+│   Client    │─────▶│  Verifier Service│─────▶│ Solana Program  │
+│  (Browser)  │      │  (Off-chain ZK)  │      │  (On-chain)     │
+└─────────────┘      └──────────────────┘      └─────────────────┘
+      │                       │                          │
+      │ 1. Generate proof     │                          │
+      │                       │                          │
+      │ 2. Submit proof ─────▶│                          │
+      │                       │ 3. Verify with snarkjs   │
+      │                       │    Sign attestation      │
+      │                       │                          │
+      │ 4. Get signature ◀────│                          │
+      │                       │                          │
+      │ 5. Submit tx ─────────────────────────────────▶ │
+      │    (with Ed25519 sig) │                          │
+      │                       │                 6. Verify signature
+      │                       │                    Update flags
 ```
 
-### Technology Stack
+### How It Works
 
-- **Blockchain**: Solana (Devnet)
-- **Smart Contracts**: Anchor Framework v0.32.1
-- **ZK Circuits**: Circom v2.1.6 with Groth16 proving system
-- **Web App**: Next.js 14+, TypeScript, Tailwind CSS
-- **Mobile App**: React Native with Expo ~50.0.0
-- **Libraries**: snarkjs, circomlibjs, @solana/web3.js
+1. **Client generates ZK proof** (browser with circomlibjs)
+2. **Verifier service validates proof** (snarkjs off-chain)
+3. **Verifier signs attestation** (Ed25519 over domain-separated message)
+4. **Client submits to Solana** (proof + signature in single tx)
+5. **Program validates signature** (via sysvar::instructions)
+6. **Identity updated on-chain** (age_verified/nationality_verified flags)
 
-## 📦 Project Structure
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js >=18
+- Rust & Solana CLI
+- Anchor CLI v0.32.1
+
+### 1. Install & Build
+
+```bash
+# Clone repository
+git clone https://github.com/Rahul-Prasad-07/Zassport.git
+cd Zassport
+
+# Install dependencies
+yarn install
+
+# Build Solana program
+anchor build
+
+# Run tests (10 passing)
+anchor test
+```
+
+### 2. Deploy to Devnet
+
+```bash
+# Deploy program
+./scripts/deploy.sh devnet
+
+# Generate verifier keypair
+cd verifier-service
+node scripts/generate-keypair.js
+
+# Initialize verifier config on-chain
+cd ..
+ts-node scripts/init-verifier.ts <verifier-pubkey-hex>
+```
+
+### 3. Start Verifier Service
+
+```bash
+cd verifier-service
+
+# Configure environment
+cp .env.example .env
+# Add VERIFIER_SECRET_KEY from step 2
+
+# Install & start
+npm install
+npm start
+```
+
+Service runs at `http://localhost:3000`
+
+## 📁 Project Structure
 
 ```
 Zassport/
-├── programs/zassport/        # Solana smart contracts (Anchor)
-│   └── src/
-│       ├── lib.rs            # Main program logic
-│       ├── state.rs          # Account structures
+├── programs/zassport/          # Solana program (Anchor)
+│   ├── src/
+│   │   ├── lib.rs             # Entrypoints
+│   │   ├── state/             # Account structures
+│   │   ├── instructions/      # Instruction handlers
+│   │   │   ├── attest_age_proof.rs
+│   │   │   ├── attest_nationality_proof.rs
+│   │   │   └── set_verifier.rs
+│   │   └── zk_verifier/       # Groth16 verification
+│
+├── verifier-service/           # Off-chain verifier
+│   ├── src/server.js          # Express API
+│   ├── scripts/
+│   │   └── generate-keypair.js
+│   └── .env.example
+│
+├── sdk/                        # Client SDK
+│   ├── attestation-helpers.ts # Message builders
+│   └── example-usage.ts       # Integration examples
+│
+├── circuits/                   # Circom ZK circuits
+│   ├── age_proof/
+│   ├── nationality_proof/
+│   └── passport_verifier/
+│
+├── scripts/                    # Deployment
+│   ├── deploy.sh
+│   └── init-verifier.ts
+│
+└── tests/
+    └── zassport-e2e.spec.ts   # E2E tests (10 passing)
+```
 │       ├── errors.rs         # Error definitions
 │       └── instructions/     # Individual instructions
 ├── circuits/                 # ZK circuits (Circom)
