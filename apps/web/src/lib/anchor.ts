@@ -4,7 +4,7 @@ import { AnchorWallet } from '@solana/wallet-adapter-react';
 import idl from './zassport.json';
 
 // Deployed program ID on devnet
-export const PROGRAM_ID = new PublicKey('5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V');
+export const PROGRAM_ID = new PublicKey('FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ');
 
 // Create program instance
 export function getProgram(connection: Connection, wallet: AnchorWallet) {
@@ -50,3 +50,15 @@ export function getNullifierRegistryPDA(programId: PublicKey = PROGRAM_ID) {
   );
   return pda;
 }
+
+// Helper to get verifier config PDA
+export function getVerifierConfigPDA(programId: PublicKey = PROGRAM_ID) {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('verifier_config')],
+    programId
+  );
+  return pda;
+}
+
+// Instructions sysvar address
+export const SYSVAR_INSTRUCTIONS_PUBKEY = new PublicKey('Sysvar1nstructions1111111111111111111111111');

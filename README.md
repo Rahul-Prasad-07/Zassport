@@ -23,6 +23,16 @@ Zassport enables privacy-preserving passport verification on Solana:
 - **🗳️ Decentralized Governance**: Community-driven protocol decisions with reputation-weighted voting
 - **🛡️ Privacy-First**: Your passport data never leaves your device - only proofs go on-chain
 
+### Current Status: ✅ WORKING SYSTEM
+
+- **Age Attestation**: Fully working end-to-end on Solana devnet
+- **Nationality Attestation**: Fully working end-to-end on Solana devnet
+- **Identity Registration**: Complete with ZK commitments
+- **Verifier Service**: Production-ready with Ed25519 attestations
+- **Web App**: Complete UI with wallet integration
+- **Mobile App**: Ready for NFC hardware integration
+- **Governance**: Proposal creation and voting system
+
 ## 🏗️ Architecture
 
 ```

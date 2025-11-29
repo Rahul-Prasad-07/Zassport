@@ -7,7 +7,7 @@ import { PublicKey } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { generateAgeProof, bigintTo32BytesBE } from '@/lib/zkProofsReal';
 import { useProgram } from '@/hooks/useProgram';
-import { getNullifierRegistryPDA, PROGRAM_ID } from '@/lib/anchor';
+import { getNullifierRegistryPDA, getIdentityPDA, PROGRAM_ID } from '@/lib/anchor';
 
 interface PassportData {
   surname: string;
@@ -18,6 +18,20 @@ interface PassportData {
   expiryDate: string;
   issuingCountry: string;
 }
+
+// Helper function to calculate age from date of birth
+const calculateAge = (dateOfBirth: string): number => {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+
+  return age;
+};
 
 export function IdentityRegistration() {
   const { publicKey } = useWallet();
@@ -45,11 +59,6 @@ export function IdentityRegistration() {
       return;
     }
 
-    if (!program) {
-      setStatus('⚠️ Smart contract program not initialized. Please ensure you are connected to Solana devnet and the program is deployed at: 5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V');
-      return;
-    }
-
     // Validate passport data
     if (!passportData.documentNumber || !passportData.dateOfBirth || !passportData.nationality) {
       setStatus('Please fill in all required passport fields');
@@ -57,14 +66,22 @@ export function IdentityRegistration() {
     }
 
     setIsLoading(true);
-    setStatus('Generating ZK proof...');
+
+    // Production mode - blockchain registration
+    if (!program) {
+      setStatus('⚠️ Smart contract program not initialized. Please ensure you are connected to Solana devnet.');
+      setIsLoading(false);
+      return;
+    }
+
+    setStatus('🔄 Generating ZK proof...');
 
     try {
       // Ensure nullifier registry account is initialized
       const registryPda = getNullifierRegistryPDA(PROGRAM_ID);
       const existing = await connection.getAccountInfo(registryPda);
       if (!existing) {
-        setStatus('Initializing registry on-chain...');
+        setStatus('🔄 Initializing registry on-chain...');
         await program.methods
           .initializeProgram()
           .accounts({
@@ -76,8 +93,8 @@ export function IdentityRegistration() {
 
       // Generate ZK proof for age verification (18+)
       const proofResult = await generateAgeProof(passportData);
-      
-      setStatus('Submitting proof to blockchain...');
+
+      setStatus('🔄 Submitting proof to blockchain...');
 
       // Convert to 32-byte big-endian arrays matching on-chain expectation
       const commitmentBytes = bigintTo32BytesBE(proofResult.commitment);
@@ -94,30 +111,6 @@ export function IdentityRegistration() {
 
       setStatus(`✅ Identity registered successfully! TX: ${tx.slice(0, 8)}...`);
 
-      // Debug: fetch on-chain identity and compare stored commitment/nullifier
-      try {
-        const identityPda = getIdentityPDA(publicKey);
-        // fetchNullable returns null if not initialized
-        const onchain = await program.account.identity.fetchNullable(identityPda);
-        if (onchain) {
-          const onchainCommitment = Buffer.from(onchain.commitment).toString('hex');
-          const onchainNullifier = Buffer.from(onchain.nullifier).toString('hex');
-          const expectedCommitment = Buffer.from(commitmentBytes).toString('hex');
-          const expectedNullifier = Buffer.from(nullifierBytes).toString('hex');
-
-          console.log('On-chain identity:', { onchainCommitment, onchainNullifier });
-          console.log('Expected (client):', { expectedCommitment, expectedNullifier });
-
-          if (onchainCommitment !== expectedCommitment || onchainNullifier !== expectedNullifier) {
-            setStatus(prev => prev + '\n\n⚠️ Warning: on-chain commitment/nullifier do not match client values. See console for hex output. You may need to re-register.');
-          } else {
-            setStatus(prev => prev + '\n\n✅ On-chain commitment matches client commitment.');
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch/compare on-chain identity:', err);
-      }
-
     } catch (error: any) {
       console.error('Registration failed:', error);
       setStatus(`❌ Registration failed: ${error.message}`);
@@ -129,20 +122,20 @@ export function IdentityRegistration() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+        <h3 className="text-2xl font-semibold text-white mb-2">
           Register Your ZK Identity
         </h3>
-        <p className="text-gray-600">
+        <p className="text-gray-300 mb-4">
           Create a privacy-preserving identity using zero-knowledge proofs from your passport data.
         </p>
       </div>
 
       {/* Passport Data Input Form */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h4 className="font-medium text-gray-900 mb-4">Enter Your Passport Information</h4>
+      <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+        <h4 className="font-medium text-white mb-4">Enter Your Passport Information</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Surname *
             </label>
             <input

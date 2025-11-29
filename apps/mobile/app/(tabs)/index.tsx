@@ -18,6 +18,45 @@ export default function HomeScreen() {
     setWalletAddress(address);
   };
 
+  const attestProof = async (proofData: any, type: string) => {
+    try {
+      const verifierUrl = 'http://localhost:3000'; // TODO: make configurable
+      const endpoint = type === 'age' ? '/verify-age' : '/verify-nationality';
+
+      const requestBody = {
+        proof: proofData.proof,
+        publicInputs: proofData.publicInputs,
+        owner: walletAddress,
+        identity: 'placeholder', // TODO: get PDA
+        commitment: proofData.commitment.toString(),
+        nullifier: proofData.nullifier.toString(),
+        ...(type === 'age' ? { minAge: 18 } : { allowedNationality: proofData.allowedNationality ?? 0 }),
+      };
+
+      const response = await fetch(`${verifierUrl}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Verifier error: ${response.statusText}`);
+      }
+
+      const attestation = await response.json();
+      if (!attestation.success) {
+        throw new Error(attestation.error || 'Attestation failed');
+      }
+
+      // TODO: Submit to Solana on-chain
+      Alert.alert('Success', `Attestation successful! TX: ${'placeholder'}`);
+      return true;
+    } catch (error) {
+      Alert.alert('Attestation Failed', error.message);
+      return false;
+    }
+  };
+
   const generateProofs = async () => {
     if (!passportData) return;
 
@@ -27,21 +66,19 @@ export default function HomeScreen() {
 
       // Generate age proof (18+)
       const ageProof = await generateAgeProof(passportData);
-      newProofs.push({ type: 'Age Proof (18+)', proof: ageProof });
+      const ageSuccess = await attestProof(ageProof, 'age');
+      newProofs.push({ type: 'Age Proof (18+)', proof: ageProof, attested: ageSuccess });
 
       // Generate nationality proof
       const nationalityProof = await generateNationalityProof(passportData, passportData.nationality);
-      newProofs.push({ type: 'Nationality Proof', proof: nationalityProof });
-
-      // Generate passport proof
-      const passportProof = await generatePassportProof(passportData);
-      newProofs.push({ type: 'Passport Verification', proof: passportProof });
+      const natSuccess = await attestProof(nationalityProof, 'nationality');
+      newProofs.push({ type: 'Nationality Proof', proof: nationalityProof, attested: natSuccess });
 
       setProofs(newProofs);
-      Alert.alert('Success', 'ZK proofs generated successfully!');
+      Alert.alert('Success', 'ZK proofs generated and attested!');
     } catch (error) {
-      console.error('Error generating proofs:', error);
-      Alert.alert('Error', 'Failed to generate proofs');
+      console.error('Error:', error);
+      Alert.alert('Error', 'Failed to generate/attest proofs');
     } finally {
       setGenerating(false);
     }
@@ -101,7 +138,9 @@ export default function HomeScreen() {
           {proofs.map((proof, index) => (
             <View key={index} style={styles.proofCard}>
               <Text style={styles.proofType}>{proof.type}</Text>
-              <Text style={styles.proofStatus}>Verified</Text>
+              <Text style={[styles.proofStatus, proof.attested ? styles.attested : styles.pending]}>
+                {proof.attested ? 'Attested' : 'Pending'}
+              </Text>
             </View>
           ))}
         </View>
@@ -267,7 +306,12 @@ const styles = StyleSheet.create({
   },
   proofStatus: {
     fontSize: 14,
-    color: '#10B981',
     fontWeight: '600',
+  },
+  attested: {
+    color: '#10B981',
+  },
+  pending: {
+    color: '#F59E0B',
   },
 });

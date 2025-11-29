@@ -1,4 +1,10 @@
-{
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/zassport.json`.
+ */
+export type Zassport = {
   "address": "FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ",
   "metadata": {
     "name": "zassport",
@@ -8,7 +14,7 @@
   },
   "instructions": [
     {
-      "name": "attest_age",
+      "name": "attestAge",
       "discriminator": [
         207,
         61,
@@ -46,7 +52,7 @@
           }
         },
         {
-          "name": "verifier_config",
+          "name": "verifierConfig",
           "pda": {
             "seeds": [
               {
@@ -84,7 +90,7 @@
       ],
       "args": [
         {
-          "name": "min_age",
+          "name": "minAge",
           "type": "u64"
         },
         {
@@ -94,7 +100,7 @@
       ]
     },
     {
-      "name": "attest_nationality",
+      "name": "attestNationality",
       "discriminator": [
         49,
         118,
@@ -132,7 +138,7 @@
           }
         },
         {
-          "name": "verifier_config",
+          "name": "verifierConfig",
           "pda": {
             "seeds": [
               {
@@ -170,7 +176,7 @@
       ],
       "args": [
         {
-          "name": "allowed_nationality",
+          "name": "allowedNationality",
           "type": "u64"
         },
         {
@@ -180,7 +186,7 @@
       ]
     },
     {
-      "name": "cast_vote",
+      "name": "castVote",
       "discriminator": [
         20,
         212,
@@ -212,13 +218,13 @@
               },
               {
                 "kind": "arg",
-                "path": "proposal_id"
+                "path": "proposalId"
               }
             ]
           }
         },
         {
-          "name": "voter_identity",
+          "name": "voterIdentity",
           "pda": {
             "seeds": [
               {
@@ -242,7 +248,7 @@
           }
         },
         {
-          "name": "vote_record",
+          "name": "voteRecord",
           "writable": true,
           "pda": {
             "seeds": [
@@ -257,11 +263,11 @@
               },
               {
                 "kind": "arg",
-                "path": "proposal_id"
+                "path": "proposalId"
               },
               {
                 "kind": "account",
-                "path": "voter_identity"
+                "path": "voterIdentity"
               }
             ]
           }
@@ -272,27 +278,27 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "proposal_id",
+          "name": "proposalId",
           "type": "u64"
         },
         {
           "name": "vote",
           "type": {
             "defined": {
-              "name": "VoteType"
+              "name": "voteType"
             }
           }
         }
       ]
     },
     {
-      "name": "create_proposal",
+      "name": "createProposal",
       "discriminator": [
         132,
         116,
@@ -324,13 +330,13 @@
               },
               {
                 "kind": "arg",
-                "path": "proposal_id"
+                "path": "proposalId"
               }
             ]
           }
         },
         {
-          "name": "creator_identity",
+          "name": "creatorIdentity",
           "pda": {
             "seeds": [
               {
@@ -359,13 +365,13 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "proposal_id",
+          "name": "proposalId",
           "type": "u64"
         },
         {
@@ -377,13 +383,13 @@
           "type": "string"
         },
         {
-          "name": "voting_period",
+          "name": "votingPeriod",
           "type": "i64"
         }
       ]
     },
     {
-      "name": "initialize_program",
+      "name": "initializeProgram",
       "discriminator": [
         176,
         107,
@@ -396,7 +402,7 @@
       ],
       "accounts": [
         {
-          "name": "nullifier_registry",
+          "name": "nullifierRegistry",
           "writable": true,
           "pda": {
             "seeds": [
@@ -432,14 +438,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "initialize_verifier_config",
+      "name": "initializeVerifierConfig",
       "discriminator": [
         25,
         128,
@@ -452,7 +458,7 @@
       ],
       "accounts": [
         {
-          "name": "verifier_config",
+          "name": "verifierConfig",
           "writable": true,
           "pda": {
             "seeds": [
@@ -485,7 +491,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -497,7 +503,7 @@
       ]
     },
     {
-      "name": "register_identity",
+      "name": "registerIdentity",
       "discriminator": [
         164,
         118,
@@ -535,7 +541,7 @@
           }
         },
         {
-          "name": "nullifier_registry",
+          "name": "nullifierRegistry",
           "writable": true,
           "pda": {
             "seeds": [
@@ -566,7 +572,7 @@
           }
         },
         {
-          "name": "reputation_record",
+          "name": "reputationRecord",
           "writable": true,
           "pda": {
             "seeds": [
@@ -598,7 +604,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -624,7 +630,7 @@
       ]
     },
     {
-      "name": "update_reputation",
+      "name": "updateReputation",
       "discriminator": [
         194,
         220,
@@ -662,7 +668,7 @@
           }
         },
         {
-          "name": "reputation_record",
+          "name": "reputationRecord",
           "writable": true,
           "pda": {
             "seeds": [
@@ -701,7 +707,7 @@
       ]
     },
     {
-      "name": "update_verifier",
+      "name": "updateVerifier",
       "discriminator": [
         198,
         42,
@@ -714,7 +720,7 @@
       ],
       "accounts": [
         {
-          "name": "verifier_config",
+          "name": "verifierConfig",
           "writable": true,
           "pda": {
             "seeds": [
@@ -745,19 +751,19 @@
           "name": "authority",
           "signer": true,
           "relations": [
-            "verifier_config"
+            "verifierConfig"
           ]
         }
       ],
       "args": [
         {
-          "name": "new_verifier",
+          "name": "newVerifier",
           "type": "pubkey"
         }
       ]
     },
     {
-      "name": "verify_age_proof",
+      "name": "verifyAgeProof",
       "discriminator": [
         37,
         55,
@@ -819,15 +825,15 @@
           }
         },
         {
-          "name": "current_timestamp",
+          "name": "currentTimestamp",
           "type": "i64"
         },
         {
-          "name": "min_age",
+          "name": "minAge",
           "type": "u64"
         },
         {
-          "name": "max_age",
+          "name": "maxAge",
           "type": "u64"
         },
         {
@@ -837,7 +843,7 @@
       ]
     },
     {
-      "name": "verify_nationality_proof",
+      "name": "verifyNationalityProof",
       "discriminator": [
         140,
         204,
@@ -899,7 +905,7 @@
           }
         },
         {
-          "name": "allowed_nationality",
+          "name": "allowedNationality",
           "type": "u64"
         },
         {
@@ -909,7 +915,7 @@
       ]
     },
     {
-      "name": "verify_passport_proof",
+      "name": "verifyPassportProof",
       "discriminator": [
         117,
         138,
@@ -947,7 +953,7 @@
           }
         },
         {
-          "name": "nullifier_registry",
+          "name": "nullifierRegistry",
           "writable": true,
           "pda": {
             "seeds": [
@@ -983,7 +989,7 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -1015,7 +1021,7 @@
   ],
   "accounts": [
     {
-      "name": "GovernanceProposal",
+      "name": "governanceProposal",
       "discriminator": [
         53,
         107,
@@ -1028,7 +1034,7 @@
       ]
     },
     {
-      "name": "Identity",
+      "name": "identity",
       "discriminator": [
         58,
         132,
@@ -1041,7 +1047,7 @@
       ]
     },
     {
-      "name": "NullifierRegistry",
+      "name": "nullifierRegistry",
       "discriminator": [
         100,
         229,
@@ -1054,7 +1060,7 @@
       ]
     },
     {
-      "name": "ReputationRecord",
+      "name": "reputationRecord",
       "discriminator": [
         140,
         29,
@@ -1067,7 +1073,7 @@
       ]
     },
     {
-      "name": "VerifierConfig",
+      "name": "verifierConfig",
       "discriminator": [
         176,
         103,
@@ -1080,7 +1086,7 @@
       ]
     },
     {
-      "name": "VoteRecord",
+      "name": "voteRecord",
       "discriminator": [
         112,
         9,
@@ -1096,108 +1102,108 @@
   "errors": [
     {
       "code": 6000,
-      "name": "NullifierAlreadyUsed",
+      "name": "nullifierAlreadyUsed",
       "msg": "Nullifier has already been used - identity already registered"
     },
     {
       "code": 6001,
-      "name": "Unauthorized",
+      "name": "unauthorized",
       "msg": "Unauthorized access"
     },
     {
       "code": 6002,
-      "name": "UnauthorizedAccess",
+      "name": "unauthorizedAccess",
       "msg": "Unauthorized access to identity"
     },
     {
       "code": 6003,
-      "name": "IdentityNotActive",
+      "name": "identityNotActive",
       "msg": "Identity is not active"
     },
     {
       "code": 6004,
-      "name": "TitleTooLong",
+      "name": "titleTooLong",
       "msg": "Proposal title is too long (max 200 characters)"
     },
     {
       "code": 6005,
-      "name": "DescriptionTooLong",
+      "name": "descriptionTooLong",
       "msg": "Proposal description is too long (max 1000 characters)"
     },
     {
       "code": 6006,
-      "name": "InvalidVotingPeriod",
+      "name": "invalidVotingPeriod",
       "msg": "Invalid voting period"
     },
     {
       "code": 6007,
-      "name": "ProposalAlreadyExecuted",
+      "name": "proposalAlreadyExecuted",
       "msg": "Proposal has already been executed"
     },
     {
       "code": 6008,
-      "name": "VotingPeriodEnded",
+      "name": "votingPeriodEnded",
       "msg": "Voting period has ended"
     },
     {
       "code": 6009,
-      "name": "InvalidZKProof",
+      "name": "invalidZkProof",
       "msg": "Invalid ZK proof"
     },
     {
       "code": 6010,
-      "name": "InvalidProof",
+      "name": "invalidProof",
       "msg": "Invalid proof data"
     },
     {
       "code": 6011,
-      "name": "InvalidCommitment",
+      "name": "invalidCommitment",
       "msg": "Invalid commitment"
     },
     {
       "code": 6012,
-      "name": "InvalidNullifier",
+      "name": "invalidNullifier",
       "msg": "Invalid nullifier"
     },
     {
       "code": 6013,
-      "name": "PassportVerificationFailed",
+      "name": "passportVerificationFailed",
       "msg": "Passport verification failed"
     },
     {
       "code": 6014,
-      "name": "InvalidVerificationKey",
+      "name": "invalidVerificationKey",
       "msg": "Invalid verification key"
     },
     {
       "code": 6015,
-      "name": "ProofVerificationFailed",
+      "name": "proofVerificationFailed",
       "msg": "Proof verification failed"
     },
     {
       "code": 6016,
-      "name": "MissingEd25519Instruction",
+      "name": "missingEd25519Instruction",
       "msg": "Missing ed25519 signature instruction"
     },
     {
       "code": 6017,
-      "name": "InvalidAttestationMessage",
+      "name": "invalidAttestationMessage",
       "msg": "Invalid attestation message"
     },
     {
       "code": 6018,
-      "name": "InvalidVerifier",
+      "name": "invalidVerifier",
       "msg": "Invalid verifier public key"
     },
     {
       "code": 6019,
-      "name": "AttestationTimestampInvalid",
+      "name": "attestationTimestampInvalid",
       "msg": "Attestation expired or not yet valid"
     }
   ],
   "types": [
     {
-      "name": "GovernanceProposal",
+      "name": "governanceProposal",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1218,19 +1224,19 @@
             "type": "pubkey"
           },
           {
-            "name": "created_at",
+            "name": "createdAt",
             "type": "i64"
           },
           {
-            "name": "voting_ends",
+            "name": "votingEnds",
             "type": "i64"
           },
           {
-            "name": "yes_votes",
+            "name": "yesVotes",
             "type": "u64"
           },
           {
-            "name": "no_votes",
+            "name": "noVotes",
             "type": "u64"
           },
           {
@@ -1245,7 +1251,7 @@
       }
     },
     {
-      "name": "Identity",
+      "name": "identity",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1272,15 +1278,15 @@
             }
           },
           {
-            "name": "reputation_score",
+            "name": "reputationScore",
             "type": "u64"
           },
           {
-            "name": "last_updated",
+            "name": "lastUpdated",
             "type": "i64"
           },
           {
-            "name": "is_active",
+            "name": "isActive",
             "type": "bool"
           },
           {
@@ -1288,22 +1294,22 @@
             "type": "u8"
           },
           {
-            "name": "age_verified",
+            "name": "ageVerified",
             "type": "bool"
           },
           {
-            "name": "nationality_verified",
+            "name": "nationalityVerified",
             "type": "bool"
           },
           {
-            "name": "last_attestation_ts",
+            "name": "lastAttestationTs",
             "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "NullifierRegistry",
+      "name": "nullifierRegistry",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1330,7 +1336,7 @@
       }
     },
     {
-      "name": "ReputationRecord",
+      "name": "reputationRecord",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1347,7 +1353,7 @@
             "type": "u64"
           },
           {
-            "name": "last_contribution",
+            "name": "lastContribution",
             "type": "i64"
           },
           {
@@ -1358,7 +1364,7 @@
       }
     },
     {
-      "name": "VerifierConfig",
+      "name": "verifierConfig",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1378,7 +1384,7 @@
       }
     },
     {
-      "name": "VoteRecord",
+      "name": "voteRecord",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1387,7 +1393,7 @@
             "type": "u64"
           },
           {
-            "name": "voter_identity",
+            "name": "voterIdentity",
             "type": "pubkey"
           },
           {
@@ -1395,7 +1401,7 @@
             "type": "u8"
           },
           {
-            "name": "voted_at",
+            "name": "votedAt",
             "type": "i64"
           },
           {
@@ -1406,18 +1412,18 @@
       }
     },
     {
-      "name": "VoteType",
+      "name": "voteType",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Yes"
+            "name": "yes"
           },
           {
-            "name": "No"
+            "name": "no"
           }
         ]
       }
     }
   ]
-}
+};

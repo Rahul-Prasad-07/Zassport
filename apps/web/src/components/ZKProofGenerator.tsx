@@ -11,7 +11,7 @@ import {
 } from '@/lib/passportParser';
 import { generateAgeProof, generateNationalityProof, formatProofForChain } from '@/lib/zkProofsReal';
 import { useProgram } from '@/hooks/useProgram';
-import { getIdentityPDA } from '@/lib/anchor';
+import { getIdentityPDA, getVerifierConfigPDA, SYSVAR_INSTRUCTIONS_PUBKEY } from '@/lib/anchor';
 import { getNationalityCode, bigintTo32BytesBE } from '@/lib/zkProofsReal';
 
 export function ZKProofGenerator() {
@@ -57,9 +57,7 @@ export function ZKProofGenerator() {
 - Proof Size: ${JSON.stringify(proof.proof).length} bytes
 
 🔒 Privacy: Your exact date of birth remains hidden
-⚡ Status: Ready for on-chain verification
-
-${program ? 'Click "Verify Proof On-Chain" to submit to Solana' : '⚠️ On-chain verification requires program initialization'}
+⚡ Status: Ready for on-chain attestation
         `);
       } else if (proofType === 'nationality') {
         // Generate real nationality proof
@@ -78,9 +76,7 @@ ${program ? 'Click "Verify Proof On-Chain" to submit to Solana' : '⚠️ On-cha
 - Proof Size: ${JSON.stringify(proof.proof).length} bytes
 
 🔒 Privacy: Your nationality data remains private
-⚡ Status: Ready for on-chain verification
-
-${program ? 'Click "Verify Proof On-Chain" to submit to Solana' : '⚠️ On-chain verification requires program initialization'}
+⚡ Status: Ready for on-chain attestation
         `);
       } else {
         setResult(`
@@ -100,64 +96,155 @@ Please select Age or Nationality proof type.
     }
   };
 
-  const verifyProofOnChain = async (proofData: any, type: string) => {
+  const attestProof = async (proofData: any, type: string) => {
     if (!program || !publicKey) {
-      return '❌ Program not initialized or wallet not connected. Please ensure your wallet is connected and the program is deployed.';
+      return '❌ Program not initialized or wallet not connected.';
     }
 
     try {
-      // Convert commitment and nullifier using big-endian 32-byte packing
-      const commitmentBytes = bigintTo32BytesBE(proofData.commitment);
-      const nullifierBytes = bigintTo32BytesBE(proofData.nullifier);
+      // First check if verifier config is initialized
+      const verifierConfigPDA = getVerifierConfigPDA();
+      const verifierConfigAccount = await program.provider.connection.getAccountInfo(verifierConfigPDA);
+      
+      if (!verifierConfigAccount) {
+        // Need to initialize verifier config first
+        // Get verifier public key from health endpoint
+        const healthResponse = await fetch('http://localhost:3000/health');
+        const healthData = await healthResponse.json();
+        const verifierPubKeyHex = healthData.verifierPublicKey;
+        const verifierPubKeyBytes = Buffer.from(verifierPubKeyHex, 'hex');
+        const verifierPubKey = new anchor.web3.PublicKey(verifierPubKeyBytes);
 
-      const proofObject = formatProofForChain(proofData.proof);
-      const proofBytes = Buffer.from(JSON.stringify(proofObject));
+        console.log('Initializing verifier config with pubkey:', verifierPubKey.toBase58());
 
-      const identityPda = getIdentityPDA(publicKey);
-
-      if (type === 'age') {
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const minAge = 18;
-        const maxAge = 120;
-
-        const tx = await program.methods
-          .verifyAgeProof(
-            commitmentBytes,
-            nullifierBytes,
-            new anchor.BN(currentTimestamp),
-            new anchor.BN(minAge),
-            new anchor.BN(maxAge),
-            proofBytes
-          )
-          .accounts({
-            identity: identityPda,
-            user: publicKey,
-          })
-          .rpc();
-
-        return `✅ On-chain verification successful! TX: ${tx.slice(0, 8)}...`;
-      } else if (type === 'nationality') {
-        const allowedNationality = proofData.allowedNationality ?? (lastPassportData ? getNationalityCode(lastPassportData.nationality) : 0);
-        const tx = await program.methods
-          .verifyNationalityProof(
-            commitmentBytes,
-            nullifierBytes,
-            new anchor.BN(allowedNationality),
-            proofBytes
-          )
-          .accounts({
-            identity: identityPda,
-            user: publicKey,
-          })
-          .rpc();
-
-        return `✅ On-chain verification successful! TX: ${tx.slice(0, 8)}...`;
+        try {
+          await program.methods
+            .initializeVerifierConfig(verifierPubKey)
+            .accounts({
+              verifierConfig: verifierConfigPDA,
+              authority: publicKey,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            })
+            .rpc();
+          console.log('Verifier config initialized successfully');
+        } catch (initError: any) {
+          // If already initialized by someone else, continue
+          if (!initError.message?.includes('already in use')) {
+            throw initError;
+          }
+        }
       }
+
+      // Fetch the on-chain identity to get the registered commitment and nullifier
+      const identityPDA = getIdentityPDA(publicKey);
+      console.log('Fetching identity from PDA:', identityPDA.toBase58());
+      const identityAccount = await (program.account as any).identity.fetch(identityPDA);
+      
+      // Convert on-chain bytes to decimal strings for the verifier
+      console.log('Raw identity commitment bytes:', Array.from(identityAccount.commitment).slice(0, 8));
+      const onChainCommitment = BigInt('0x' + Buffer.from(identityAccount.commitment).toString('hex')).toString();
+      const onChainNullifier = BigInt('0x' + Buffer.from(identityAccount.nullifier).toString('hex')).toString();
+
+      console.log('On-chain identity data:', {
+        commitment: onChainCommitment,
+        nullifier: onChainNullifier,
+      });
+
+      // Send proof to verifier service
+      const verifierUrl = 'http://localhost:3000';
+      const endpoint = type === 'age' ? '/verify-age' : '/verify-nationality';
+
+      console.log('Sending proof to verifier:', { type, owner: publicKey.toBase58() });
+
+      const requestBody = {
+        proof: proofData.proof,
+        publicInputs: proofData.publicSignals || proofData.publicInputs || [],
+        owner: publicKey.toBase58(),
+        identity: identityPDA.toBase58(),
+        commitment: onChainCommitment,
+        nullifier: onChainNullifier,
+        ...(type === 'age' ? { minAge: 18 } : { allowedNationality: proofData.allowedNationality ?? 0 }),
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(`${verifierUrl}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      const responseData = await response.json();
+      console.log('Verifier response:', responseData);
+
+      if (!response.ok) {
+        throw new Error(`Verifier error: ${responseData.error || response.statusText}`);
+      }
+
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'Attestation failed');
+      }
+
+      // Submit attestation on-chain
+      const message = Buffer.from(responseData.attestation.message, 'base64');
+      const signature = Buffer.from(responseData.attestation.signature, 'base64');
+      const verifierPubKey = Buffer.from(responseData.verifierPublicKey, 'base64');
+
+      console.log('Attestation data:', {
+        messageLen: message.length,
+        messageHex: message.toString('hex').slice(0, 100) + '...',
+        signatureLen: signature.length,
+        verifierPubKeyLen: verifierPubKey.length,
+        verifierPubKeyHex: Buffer.from(verifierPubKey).toString('hex'),
+      });
+
+      // Verify the verifier public key matches what's stored on-chain
+      const verifierConfig = await (program.account as any).verifierConfig.fetch(verifierConfigPDA);
+      console.log('On-chain verifier key:', verifierConfig.verifier.toBase58());
+      console.log('Verifier key from response (as Solana pubkey):', new anchor.web3.PublicKey(verifierPubKey).toBase58());
+
+      // Create Ed25519 pre-instruction
+      const ed25519Ix = anchor.web3.Ed25519Program.createInstructionWithPublicKey({
+        publicKey: verifierPubKey,
+        message,
+        signature,
+        instructionIndex: 0,
+      });
+
+      const timestamp = responseData.attestation.timestamp;
+      const minAge = responseData.attestation.minAge;
+      const allowedNationality = responseData.attestation.allowedNationality;
+
+      let tx;
+      if (type === 'age') {
+        tx = await program.methods
+          .attestAge(new anchor.BN(minAge), new anchor.BN(timestamp))
+          .accounts({
+            identity: identityPDA,
+            verifierConfig: verifierConfigPDA,
+            user: publicKey,
+            instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+          })
+          .preInstructions([ed25519Ix])
+          .rpc();
+      } else {
+        tx = await program.methods
+          .attestNationality(new anchor.BN(allowedNationality || 0), new anchor.BN(timestamp))
+          .accounts({
+            identity: identityPDA,
+            verifierConfig: verifierConfigPDA,
+            user: publicKey,
+            instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+          })
+          .preInstructions([ed25519Ix])
+          .rpc();
+      }
+
+      return `✅ Attestation successful! TX: ${tx.slice(0, 8)}...`;
     } catch (error) {
-      console.error('On-chain verification failed:', error);
-      return `❌ On-chain verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      console.error('Attestation error:', error);
+      return `❌ Attestation failed: ${(error as Error).message}`;
     }
-    return null;
   };
 
   const handleVerifyOnChain = async () => {
@@ -167,9 +254,9 @@ Please select Age or Nationality proof type.
     }
 
     setGenerating(true);
-    setResult('Submitting proof for on-chain verification...');
+    setResult('Submitting proof for attestation...');
 
-    const verificationResult = await verifyProofOnChain(proofResult, proofType);
+    const verificationResult = await attestProof(proofResult, proofType);
     if (verificationResult) {
       setResult(verificationResult);
     } else {
@@ -180,8 +267,8 @@ Please select Age or Nationality proof type.
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-xl border border-purple-500/30">
-      <h2 className="text-2xl font-bold text-white">ZK Proof Generator</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-white text-center">ZK Proof Generator</h2>
       
       <div className="space-y-4">
         <div>
@@ -248,10 +335,10 @@ Please select Age or Nationality proof type.
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Verifying On-Chain...
+                Attesting...
               </span>
             ) : (
-              'Verify Proof On-Chain'
+              'Attest Proof'
             )}
           </button>
         )}
@@ -259,8 +346,8 @@ Please select Age or Nationality proof type.
         {proofResult && !program && (
           <div className="p-4 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
             <p className="text-sm text-yellow-300">
-              ⚠️ On-chain verification is not available. The smart contract program could not be initialized. 
-              Make sure you're connected to Solana devnet.
+              ⚠️ Attestation is not available. The smart contract program could not be initialized. 
+              Make sure you're connected to Solana devnet and the verifier service is running.
             </p>
           </div>
         )}

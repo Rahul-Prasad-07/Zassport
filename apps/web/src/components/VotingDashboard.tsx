@@ -82,7 +82,7 @@ export default function VotingDashboard({ walletAddress }: VotingDashboardProps)
     setLoading(true);
     try {
       const proposalAccounts = await (program.account as any).GovernanceProposal.all();
-      const formattedProposals: Proposal[] = proposalAccounts.map((account) => {
+      const formattedProposals: Proposal[] = proposalAccounts.map((account: any) => {
         const data = account.account;
         const now = Date.now() / 1000;
         const status: 'active' | 'passed' | 'rejected' | 'expired' =
