@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import nacl from 'tweetnacl';
-import snarkjs from 'snarkjs';
+import * as snarkjs from 'snarkjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
