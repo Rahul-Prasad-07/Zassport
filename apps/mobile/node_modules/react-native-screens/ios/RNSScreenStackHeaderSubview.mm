@@ -1,5 +1,7 @@
 #import "RNSScreenStackHeaderSubview.h"
 #import "RNSConvert.h"
+#import "RNSDefines.h"
+#import "RNSScreenStackHeaderConfig.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <react/renderer/components/rnscreens/ComponentDescriptors.h>
@@ -8,23 +10,64 @@
 
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
+
+#import <rnscreens/RNSScreenStackHeaderSubviewComponentDescriptor.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
 namespace react = facebook::react;
 #endif // RCT_NEW_ARCH_ENABLED
 
-@interface RCTBridge (Private)
-+ (RCTBridge *)currentBridge;
-@end
-
 @implementation RNSScreenStackHeaderSubview
 
 #pragma mark - Common
 
+- (nullable RNSScreenStackHeaderConfig *)getHeaderConfig
+{
+  RNSScreenStackHeaderConfig *headerConfig = (RNSScreenStackHeaderConfig *_Nullable)self.reactSuperview;
+#ifndef NDEBUG
+  if (headerConfig != nil && ![headerConfig isKindOfClass:[RNSScreenStackHeaderConfig class]]) {
+    RCTLogError(@"[RNScreens] Invalid view type, expecting RNSScreenStackHeaderConfig, got: %@", headerConfig);
+    return nil;
+  }
+#endif
+  return headerConfig;
+}
+
+// We're forcing the navigation controller's view to re-layout
+// see: https://github.com/software-mansion/react-native-screens/pull/2385
+- (void)layoutNavigationBar
+{
+  // If we're not attached yet, we should not layout the navigation bar,
+  // because the layout flow won't reach us & we will clear "isLayoutDirty" flags
+  // on view above us, causing subsequent layout request to not reach us.
+  if (self.window == nil) {
+    return;
+  }
+
+  RNSScreenStackHeaderConfig *headerConfig = [self getHeaderConfig];
+  UINavigationController *navctr = headerConfig.screenView.reactViewController.navigationController;
+
+  UIView *toLayoutView = navctr.navigationBar;
+
+  // TODO: It is possible, that this needs to be called only on old architecture.
+  // Make sure that Test432 keeps working.
+  [toLayoutView setNeedsLayout];
+
+  // TODO: Determine why this must be called & deferring layout to next "update cycle"
+  // is not sufficient. See Test2552 and Test432. (Talking Paper here).
+  [toLayoutView layoutIfNeeded];
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #pragma mark - Fabric specific
+
+// Needed because of this: https://github.com/facebook/react-native/pull/37274
++ (void)load
+{
+  [super load];
+}
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -56,6 +99,8 @@ namespace react = facebook::react;
   return react::concreteComponentDescriptorProvider<react::RNSScreenStackHeaderSubviewComponentDescriptor>();
 }
 
+RNS_IGNORE_SUPER_CALL_BEGIN
+// System layouts the subviews.
 - (void)updateLayoutMetrics:(const react::LayoutMetrics &)layoutMetrics
            oldLayoutMetrics:(const react::LayoutMetrics &)oldLayoutMetrics
 {
@@ -72,37 +117,29 @@ namespace react = facebook::react;
         self);
   } else {
     self.bounds = CGRect{CGPointZero, frame.size};
+    [self layoutNavigationBar];
   }
 }
+RNS_IGNORE_SUPER_CALL_BEGIN
 
-#else
-#pragma mark - Paper specific
-
-- (instancetype)initWithBridge:(RCTBridge *)bridge
++ (BOOL)shouldBeRecycled
 {
-  if (self = [super init]) {
-    _bridge = bridge;
-  }
-  return self;
+  return NO;
 }
+
+#else // RCT_NEW_ARCH_ENABLED
+#pragma mark - Paper specific
 
 - (void)reactSetFrame:(CGRect)frame
 {
   // Block any attempt to set coordinates on RNSScreenStackHeaderSubview. This
   // makes UINavigationBar the only one to control the position of header content.
-  [super reactSetFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
+  if (!CGSizeEqualToSize(frame.size, self.frame.size)) {
+    [super reactSetFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
+    [self layoutNavigationBar];
+  }
 }
-
 #endif // RCT_NEW_ARCH_ENABLED
-
-- (RCTBridge *)bridge
-{
-#ifdef RCT_NEW_ARCH_ENABLED
-  return [RCTBridge currentBridge];
-#else
-  return _bridge;
-#endif // RCT_NEW_ARCH_ENABLED
-}
 
 @end
 
@@ -116,7 +153,7 @@ RCT_EXPORT_VIEW_PROPERTY(type, RNSScreenStackHeaderSubviewType)
 #else
 - (UIView *)view
 {
-  return [[RNSScreenStackHeaderSubview alloc] initWithBridge:self.bridge];
+  return [RNSScreenStackHeaderSubview new];
 }
 #endif
 

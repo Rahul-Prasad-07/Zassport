@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { StackPresentationTypes } from 'react-native-screens';
+import { StackPresentationTypes } from '../../types';
 type Layout = { width: number; height: number };
 
 const formSheetModalHeight = 56;
@@ -8,7 +8,7 @@ export default function getDefaultHeaderHeight(
   layout: Layout,
   statusBarHeight: number,
   stackPresentation: StackPresentationTypes,
-  isLargeHeader = false
+  isLargeHeader = false,
 ): number {
   // default header heights
   let headerHeight = Platform.OS === 'android' ? 56 : 64;

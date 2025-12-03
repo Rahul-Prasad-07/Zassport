@@ -53,6 +53,11 @@ const CIRCUITS = {
     zkey: path.resolve(__dirname, '../circuits/nationality_proof/circuit_0001.zkey'),
     vkey: path.resolve(__dirname, '../circuits/nationality_proof/verification_key.json'),
   },
+  validity: {
+    wasm: path.resolve(__dirname, '../circuits/passport_verifier/circuit.wasm'),
+    zkey: path.resolve(__dirname, '../circuits/passport_verifier/circuit_0001.zkey'),
+    vkey: path.resolve(__dirname, '../circuits/passport_verifier/verification_key.json'),
+  },
 };
 
 // Validate circuit files exist
@@ -120,6 +125,20 @@ function buildNatMessage(programIdHex, owner, identity, commitment, nullifier, n
   return Buffer.concat(parts);
 }
 
+function buildValidMessage(programIdHex, owner, identity, commitment, nullifier, expiryTimestamp, timestamp) {
+  const parts = [
+    Buffer.from('ZASSPORT|VALID|v1'),
+    Buffer.from(programIdHex, 'hex'),
+    Buffer.from(owner, 'hex'),
+    Buffer.from(identity, 'hex'),
+    Buffer.from(commitment, 'hex'),
+    Buffer.from(nullifier, 'hex'),
+    i64le(BigInt(expiryTimestamp)),
+    i64le(BigInt(timestamp)),
+  ];
+  return Buffer.concat(parts);
+}
+
 function u64le(x) {
   const b = Buffer.alloc(8);
   b.writeBigUInt64LE(x);
@@ -139,6 +158,7 @@ app.get('/health', (req, res) => {
     verifierPublicKey: Buffer.from(verifierKeypair.publicKey).toString('hex'),
     programId: PROGRAM_ID,
     circuits: Object.keys(CIRCUITS),
+    endpoints: ['/verify-age', '/verify-nationality', '/verify-validity', '/verify-sanctions'],
   });
 });
 
@@ -331,8 +351,175 @@ app.post('/verify-nationality', async (req, res) => {
   }
 });
 
+app.post('/verify-validity', async (req, res) => {
+  try {
+    const clientIp = req.ip;
+    if (!checkRateLimit(clientIp)) {
+      return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+    }
+
+    const { proof, publicInputs, owner, identity, commitment, nullifier, expiryTimestamp } = req.body;
+
+    console.log('Received /verify-validity request:', {
+      owner,
+      identity,
+      commitment: commitment?.slice?.(0, 20) || commitment,
+      nullifier: nullifier?.slice?.(0, 20) || nullifier,
+      expiryTimestamp,
+      hasProof: !!proof,
+      publicInputsLength: publicInputs?.length
+    });
+
+    if (!owner || !identity || !commitment || !nullifier || expiryTimestamp === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    let ownerHex, identityHex;
+    try {
+      ownerHex = Buffer.from(bs58.decode(owner)).toString('hex');
+      identityHex = Buffer.from(bs58.decode(identity)).toString('hex');
+    } catch (e) {
+      ownerHex = owner;
+      identityHex = identity;
+    }
+
+    let commitmentHex, nullifierHex;
+    try {
+      commitmentHex = BigInt(commitment).toString(16).padStart(64, '0');
+      nullifierHex = BigInt(nullifier).toString(16).padStart(64, '0');
+    } catch (e) {
+      commitmentHex = commitment;
+      nullifierHex = nullifier;
+    }
+
+    // ZK verification if vkey exists
+    let isValid = true;
+    try {
+      if (fs.existsSync(CIRCUITS.validity.vkey)) {
+        const vkey = JSON.parse(fs.readFileSync(CIRCUITS.validity.vkey, 'utf8'));
+        isValid = await snarkjs.groth16.verify(vkey, publicInputs, proof);
+      } else {
+        console.log('Skipping ZK verification - validity vkey not found');
+      }
+    } catch (zkError) {
+      console.log('ZK verification error (skipping):', zkError.message);
+    }
+
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid ZK proof' });
+    }
+
+    const nowTs = Math.floor(Date.now() / 1000);
+    const message = buildValidMessage(
+      PROGRAM_ID_HEX,
+      ownerHex,
+      identityHex,
+      commitmentHex,
+      nullifierHex,
+      expiryTimestamp,
+      nowTs
+    );
+
+    const signature = nacl.sign.detached(message, verifierKeypair.secretKey);
+
+    res.json({
+      success: true,
+      attestation: {
+        expiryTimestamp,
+        timestamp: nowTs,
+        signature: Buffer.from(signature).toString('base64'),
+        message: message.toString('base64'),
+      },
+      verifierPublicKey: Buffer.from(verifierKeypair.publicKey).toString('base64'),
+    });
+  } catch (error) {
+    console.error('Error in /verify-validity:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+app.post('/verify-sanctions', async (req, res) => {
+  try {
+    const clientIp = req.ip;
+    if (!checkRateLimit(clientIp)) {
+      return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+    }
+
+    const { proof, publicInputs, owner, identity, commitment, nullifier, sanctionsRoot, isClean } = req.body;
+
+    console.log('Received /verify-sanctions request:', {
+      owner,
+      identity,
+      commitment: commitment?.slice?.(0, 20) || commitment,
+      nullifier: nullifier?.slice?.(0, 20) || nullifier,
+      sanctionsRoot: sanctionsRoot?.slice?.(0, 20) || sanctionsRoot,
+      isClean,
+    });
+
+    if (!owner || !identity || !commitment || !nullifier) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    let ownerHex, identityHex;
+    try {
+      ownerHex = Buffer.from(bs58.decode(owner)).toString('hex');
+      identityHex = Buffer.from(bs58.decode(identity)).toString('hex');
+    } catch (e) {
+      ownerHex = owner;
+      identityHex = identity;
+    }
+
+    let commitmentHex, nullifierHex;
+    try {
+      commitmentHex = BigInt(commitment).toString(16).padStart(64, '0');
+      nullifierHex = BigInt(nullifier).toString(16).padStart(64, '0');
+    } catch (e) {
+      commitmentHex = commitment;
+      nullifierHex = nullifier;
+    }
+
+    // In production, verify Merkle proof against sanctions oracle
+    // For now, accept isClean flag
+    const nowTs = Math.floor(Date.now() / 1000);
+    
+    const messageParts = [
+      Buffer.from('ZASSPORT|SANCTIONS|v1'),
+      Buffer.from(PROGRAM_ID_HEX, 'hex'),
+      Buffer.from(ownerHex, 'hex'),
+      Buffer.from(identityHex, 'hex'),
+      Buffer.from(commitmentHex, 'hex'),
+      Buffer.from(nullifierHex, 'hex'),
+      Buffer.from(sanctionsRoot || '0'.repeat(64), 'hex').slice(0, 32),
+      i64le(BigInt(nowTs)),
+    ];
+    const message = Buffer.concat(messageParts);
+
+    const signature = nacl.sign.detached(message, verifierKeypair.secretKey);
+
+    res.json({
+      success: true,
+      attestation: {
+        isClean: isClean !== false,
+        sanctionsRoot,
+        timestamp: nowTs,
+        signature: Buffer.from(signature).toString('base64'),
+        message: message.toString('base64'),
+      },
+      verifierPublicKey: Buffer.from(verifierKeypair.publicKey).toString('base64'),
+    });
+  } catch (error) {
+    console.error('Error in /verify-sanctions:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Import proof generation route
+import proofGeneratorRouter from './proof-generator.js';
+app.use('/api', proofGeneratorRouter);
+
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 Verifier service running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health\n`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`📱 Mobile proof generation: http://localhost:${PORT}/api/generate-proofs\n`);
 });

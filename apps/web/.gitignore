@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ZK circuits (use synced versions from /circuits/)
+/public/circuits/build/
+*.wasm
+*.zkey
+*.r1cs
+
+# Passport test data
+test-passports/
+*.mrz
+passport-data/
+
+# Local development
+.vercel
+.turbo

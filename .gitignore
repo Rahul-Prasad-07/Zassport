@@ -38,6 +38,14 @@ id.json
 .localnet/            # local validator ledger (if used)
 .solana/              # local Solana config/keys (if present)
 
+# Verifier service secrets
+verifier-service/.env
+verifier-service/*.keypair
+
+# Service environment files
+services/*/.env
+services/*/.env.local
+
 # Generated artifacts (IDLs sometimes kept under idl/ — adjust if you commit them)
 idl/
 pkg/
@@ -78,3 +86,18 @@ test-ledger/
 # Misc
 yarn.lock
 pnpm-lock.yaml
+.vercel
+.env*.local
+
+# Circuit build artifacts (large files)
+circuits/*/build/
+circuits/*/*.r1cs
+circuits/*/*.wasm
+circuits/*/*.zkey
+circuits/pot*_0000.ptau
+circuits/pot*_0001.ptau
+
+# Passport/NFC testing data
+test-passports/
+*.mrz
+passport-data/

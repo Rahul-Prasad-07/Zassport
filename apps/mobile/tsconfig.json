@@ -3,8 +3,14 @@
   "compilerOptions": {
     "strict": true,
     "jsx": "react-native",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "noImplicitAny": false,
     "paths": {
       "@/*": ["./*"]
-    }
-  }
+    },
+    "typeRoots": ["./types", "./node_modules/@types"]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "types/**/*.d.ts"]
 }

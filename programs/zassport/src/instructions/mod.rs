@@ -10,6 +10,9 @@ pub mod set_verifier;
 pub mod attest_passport;
 pub mod attest_age_proof;
 pub mod attest_nationality_proof;
+pub mod multi_verifier;
+pub mod revocation;
+pub mod social_recovery;
 
 pub use cast_vote::*;
 pub use create_proposal::*;
@@ -22,3 +25,6 @@ pub use verify_proof::*;
 pub use set_verifier::*;
 pub use attest_age_proof::*;
 pub use attest_nationality_proof::*;
+pub use multi_verifier::*;
+pub use revocation::*;
+pub use social_recovery::*;

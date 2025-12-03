@@ -65,7 +65,7 @@ export default function NFCScanner({ onScanComplete }: NFCScannerProps) {
         await NfcManager.requestTechnology(NfcTech.Ndef);
 
         const tag = await NfcManager.getTag();
-        let passportData = null;
+        let passportData: any = null;
 
         if (tag?.ndefMessage) {
           const ndefRecords = tag.ndefMessage;

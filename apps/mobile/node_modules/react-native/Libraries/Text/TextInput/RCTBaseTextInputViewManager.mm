@@ -64,14 +64,13 @@ RCT_EXPORT_VIEW_PROPERTY(onChange, RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onKeyPressSync, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onChangeSync, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onSelectionChange, RCTDirectEventBlock)
-RCT_EXPORT_VIEW_PROPERTY(onTextInput, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onScroll, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(mostRecentEventCount, NSInteger)
 
 RCT_EXPORT_SHADOW_PROPERTY(text, NSString)
 RCT_EXPORT_SHADOW_PROPERTY(placeholder, NSString)
-RCT_EXPORT_SHADOW_PROPERTY(onContentSizeChange, RCTBubblingEventBlock)
+RCT_EXPORT_SHADOW_PROPERTY(onContentSizeChange, RCTDirectEventBlock)
 
 RCT_CUSTOM_VIEW_PROPERTY(multiline, BOOL, UIView)
 {

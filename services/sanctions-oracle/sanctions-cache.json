@@ -1,0 +1,75 @@
+{
+  "timestamp": 1764748146360,
+  "entries": [
+    {
+      "id": "OFAC-MOCK-0",
+      "name": "Mock Sanctioned Entity 0",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK0"
+    },
+    {
+      "id": "OFAC-MOCK-1",
+      "name": "Mock Sanctioned Entity 1",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK1"
+    },
+    {
+      "id": "OFAC-MOCK-2",
+      "name": "Mock Sanctioned Entity 2",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK2"
+    },
+    {
+      "id": "OFAC-MOCK-3",
+      "name": "Mock Sanctioned Entity 3",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK3"
+    },
+    {
+      "id": "OFAC-MOCK-4",
+      "name": "Mock Sanctioned Entity 4",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK4"
+    },
+    {
+      "id": "OFAC-MOCK-5",
+      "name": "Mock Sanctioned Entity 5",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK5"
+    },
+    {
+      "id": "OFAC-MOCK-6",
+      "name": "Mock Sanctioned Entity 6",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK6"
+    },
+    {
+      "id": "OFAC-MOCK-7",
+      "name": "Mock Sanctioned Entity 7",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK7"
+    },
+    {
+      "id": "OFAC-MOCK-8",
+      "name": "Mock Sanctioned Entity 8",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK8"
+    },
+    {
+      "id": "OFAC-MOCK-9",
+      "name": "Mock Sanctioned Entity 9",
+      "nationality": "XX",
+      "dateOfBirth": "1970-01-01",
+      "passportNumber": "MOCK9"
+    }
+  ]
+}

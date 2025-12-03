@@ -11,25 +11,27 @@
 'use strict';
 
 import type {NativeModuleTypeAnnotation} from '../CodegenSchema';
+import type {TypeDeclarationMap} from '../parsers/utils';
 import type {ParserType} from './errors';
 import type {Parser} from './parser';
-import type {TypeDeclarationMap} from '../parsers/utils';
 
 const {
-  MisnamedModuleInterfaceParserError,
-  UnsupportedFunctionReturnTypeAnnotationParserError,
-  ModuleInterfaceNotFoundParserError,
-  MoreThanOneModuleRegistryCallsParserError,
-  UnusedModuleInterfaceParserError,
+  IncorrectModuleRegistryCallArgumentTypeParserError,
   IncorrectModuleRegistryCallArityParserError,
   IncorrectModuleRegistryCallTypeParameterParserError,
-  IncorrectModuleRegistryCallArgumentTypeParserError,
+  MisnamedModuleInterfaceParserError,
+  ModuleInterfaceNotFoundParserError,
+  MoreThanOneModuleInterfaceParserError,
+  MoreThanOneModuleRegistryCallsParserError,
+  UnsupportedArrayElementTypeAnnotationParserError,
+  UnsupportedFunctionParamTypeAnnotationParserError,
+  UnsupportedFunctionReturnTypeAnnotationParserError,
+  UnsupportedModuleEventEmitterPropertyParserError,
+  UnsupportedModuleEventEmitterTypePropertyParserError,
+  UnsupportedModulePropertyParserError,
   UnsupportedObjectPropertyValueTypeAnnotationParserError,
   UntypedModuleRegistryCallParserError,
-  UnsupportedModulePropertyParserError,
-  MoreThanOneModuleInterfaceParserError,
-  UnsupportedFunctionParamTypeAnnotationParserError,
-  UnsupportedArrayElementTypeAnnotationParserError,
+  UnusedModuleInterfaceParserError,
 } = require('./errors');
 
 function throwIfModuleInterfaceIsMisnamed(
@@ -155,6 +157,44 @@ function throwIfUntypedModule(
   }
 }
 
+function throwIfEventEmitterTypeIsUnsupported(
+  nativeModuleName: string,
+  propertyName: string,
+  propertyValueType: string,
+  parser: Parser,
+  nullable: boolean,
+  untyped: boolean,
+) {
+  if (nullable || untyped) {
+    throw new UnsupportedModuleEventEmitterPropertyParserError(
+      nativeModuleName,
+      propertyName,
+      propertyValueType,
+      parser.language(),
+      nullable,
+      untyped,
+    );
+  }
+}
+
+function throwIfEventEmitterEventTypeIsUnsupported(
+  nativeModuleName: string,
+  propertyName: string,
+  propertyValueType: string,
+  parser: Parser,
+  nullable: boolean,
+) {
+  if (nullable) {
+    throw new UnsupportedModuleEventEmitterTypePropertyParserError(
+      nativeModuleName,
+      propertyName,
+      propertyValueType,
+      parser.language(),
+      nullable,
+    );
+  }
+}
+
 function throwIfModuleTypeIsUnsupported(
   nativeModuleName: string,
   propertyValue: $FlowFixMe,
@@ -186,6 +226,7 @@ function throwIfPropertyValueTypeIsUnsupported(
   type: string,
 ) {
   const invalidPropertyValueType =
+    // $FlowFixMe[invalid-computed-prop]
     UnsupportedObjectPropertyTypeToInvalidPropertyValueTypeMap[type];
 
   throw new UnsupportedObjectPropertyValueTypeAnnotationParserError(
@@ -245,6 +286,7 @@ function throwIfArrayElementTypeAnnotationIsUnsupported(
       hasteModuleName,
       flowElementType,
       flowArrayType,
+      // $FlowFixMe[invalid-computed-prop]
       TypeMap[type],
     );
   }
@@ -361,6 +403,8 @@ module.exports = {
   throwIfWrongNumberOfCallExpressionArgs,
   throwIfIncorrectModuleRegistryCallTypeParameterParserError,
   throwIfUntypedModule,
+  throwIfEventEmitterTypeIsUnsupported,
+  throwIfEventEmitterEventTypeIsUnsupported,
   throwIfModuleTypeIsUnsupported,
   throwIfMoreThanOneModuleInterfaceParserError,
   throwIfUnsupportedFunctionParamTypeAnnotationParserError,

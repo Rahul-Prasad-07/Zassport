@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
 
+pub mod multi_verifier;
+pub use multi_verifier::*;
+
 #[account]
 #[derive(InitSpace)]
 pub struct Identity {

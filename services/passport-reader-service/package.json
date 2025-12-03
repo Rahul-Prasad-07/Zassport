@@ -1,0 +1,20 @@
+{
+  "name": "passport-reader-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local desktop service to read ePassport via NFC (PC/SC)",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  }
+}
