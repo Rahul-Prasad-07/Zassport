@@ -1,6 +1,6 @@
-use anchor_lang::prelude::*;
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct UpdateReputation<'info> {
@@ -21,10 +21,7 @@ pub struct UpdateReputation<'info> {
     pub authority: Signer<'info>, // Admin or authorized entity
 }
 
-pub fn update_reputation(
-    ctx: Context<UpdateReputation>,
-    points: i64,
-) -> Result<()> {
+pub fn update_reputation(ctx: Context<UpdateReputation>, points: i64) -> Result<()> {
     let identity = &mut ctx.accounts.identity;
     let reputation_record = &mut ctx.accounts.reputation_record;
 
@@ -40,6 +37,10 @@ pub fn update_reputation(
     reputation_record.score = identity.reputation_score;
     reputation_record.last_contribution = Clock::get()?.unix_timestamp;
 
-    msg!("Reputation updated by {} points. New score: {}", points, identity.reputation_score);
+    msg!(
+        "Reputation updated by {} points. New score: {}",
+        points,
+        identity.reputation_score
+    );
     Ok(())
 }

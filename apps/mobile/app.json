@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Zassport",
+    "slug": "zassport-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/circuits/**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zassport.mobile",
+      "infoPlist": {
+        "NFCReaderUsageDescription": "This app uses NFC to read passport data for identity verification."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.zassport.mobile",
+      "permissions": [
+        "android.permission.NFC",
+        "android.permission.INTERNET"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Allow $(PRODUCT_NAME) to read NFC tags for passport verification"
+        }
+      ],
+      "expo-asset"
+    ],
+    "scheme": "zassport",
+    "extra": {
+      "eas": {
+        "projectId": "zassport-mobile"
+      }
+    }
+  }
+}

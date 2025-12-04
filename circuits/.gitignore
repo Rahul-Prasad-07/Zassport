@@ -1,0 +1,46 @@
+# Circuit build artifacts
+*/build/
+*/node_modules/
+*/*_js/
+*/*_cpp/
+
+# Generated files
+*/circuit.r1cs
+*/circuit.sym
+*/circuit.wasm
+*/witness.wtns
+*/proof.json
+*/public.json
+*/verification_key.json
+*/circuit_0000.zkey
+*/circuit_0001.zkey
+*/circuit_final.zkey
+
+# Powers of Tau files (keep only final)
+pot*_0000.ptau
+pot*_0001.ptau
+
+# Contribution files
+contribution*.json
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+
+# Node modules in circuit scripts
+scripts/node_modules/

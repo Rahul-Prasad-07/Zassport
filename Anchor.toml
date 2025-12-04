@@ -5,14 +5,17 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
+[programs.devnet]
+zassport = "FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ"
+
 [programs.localnet]
-zassport = "5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V"
+zassport = "FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

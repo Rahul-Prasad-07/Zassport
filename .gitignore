@@ -1,7 +1,103 @@
-.anchor
+# Anchor / Solana / Rust / Node project .gitignore
+
+# Node
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Rust / Cargo
+/target/
+/**/target/
+/**/target/*
+/**/Cargo.lock    # uncomment if you prefer to ignore workspace Cargo.lock
+
+# Anchor / Solana build artifacts
+/target/idl/
+/target/deploy/
+/programs/**/target/
+/programs/**/deploy/
+/artifacts/
+/build/
+
+# Keypairs, secrets, envs
+*.keypair
+*.json.keypair
+keypair.json
+id.json
+*.pem
+*.seed
+*.secret
+.env
+.env.*
+.env.local
+.secret
+.localnet/            # local validator ledger (if used)
+.solana/              # local Solana config/keys (if present)
+
+# Verifier service secrets
+verifier-service/.env
+verifier-service/*.keypair
+
+# Service environment files
+services/*/.env
+services/*/.env.local
+
+# Generated artifacts (IDLs sometimes kept under idl/ — adjust if you commit them)
+idl/
+pkg/
+dist/
+generated/
+
+# Logs, caches, temp
+*.log
+coverage/
+coverage-final.json
+.cache/
+tmp/
+temp/
+*.tmp
 .DS_Store
-target
-**/*.rs.bk
-node_modules
-test-ledger
-.yarn
+Thumbs.db
+
+# Local validator and ledger artifacts (can be huge)
+test-ledger/
+**/rocksdb/**
+**/ledger/**
+**/.ledger/**
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.iml
+*.swp
+*~ 
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Misc
+yarn.lock
+pnpm-lock.yaml
+.vercel
+.env*.local
+
+# Circuit build artifacts (large files)
+circuits/*/build/
+circuits/*/*.r1cs
+circuits/*/*.wasm
+circuits/*/*.zkey
+circuits/pot*_0000.ptau
+circuits/pot*_0001.ptau
+
+# Passport/NFC testing data
+test-passports/
+*.mrz
+passport-data/

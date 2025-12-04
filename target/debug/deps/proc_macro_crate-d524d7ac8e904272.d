@@ -1,0 +1,7 @@
+/Users/kyto/zk/Zassport/target/debug/deps/proc_macro_crate-d524d7ac8e904272.d: /Users/kyto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro-crate-0.1.5/src/lib.rs
+
+/Users/kyto/zk/Zassport/target/debug/deps/libproc_macro_crate-d524d7ac8e904272.rlib: /Users/kyto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro-crate-0.1.5/src/lib.rs
+
+/Users/kyto/zk/Zassport/target/debug/deps/libproc_macro_crate-d524d7ac8e904272.rmeta: /Users/kyto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro-crate-0.1.5/src/lib.rs
+
+/Users/kyto/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro-crate-0.1.5/src/lib.rs:

@@ -109,5 +109,5 @@ snarkjs groth16 verify circuits/passport_verifier/build/verification_key.json ci
 snarkjs groth16 verify circuits/age_proof/build/verification_key.json circuits/age_proof/build/public.json circuits/age_proof/build/proof.json
 snarkjs groth16 verify circuits/nationality_proof/build/verification_key.json circuits/nationality_proof/build/public.json circuits/nationality_proof/build/proof.json
 
-echo "Test proof generation complete!"</content>
+echo "Test proof generation complete!"
 <parameter name="filePath">/Users/kyto/zk/Zassport/circuits/scripts/test_proofs.sh
