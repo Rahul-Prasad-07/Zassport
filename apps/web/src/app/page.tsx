@@ -35,6 +35,12 @@ export default function Home() {
               <Link href="#how-it-works" className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
                 How it Works
               </Link>
+              <Link href="#for-verifiers" className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                For Verifiers
+              </Link>
+              <Link href="/verify" className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                Verify User
+              </Link>
               <Link href="/claims" className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-white/5">
                 Dashboard
               </Link>
@@ -69,6 +75,12 @@ export default function Home() {
             </Link>
             <Link href="#how-it-works" className="block px-4 py-3 text-slate-300 hover:text-white rounded-lg hover:bg-white/5" onClick={() => setMobileMenuOpen(false)}>
               How it Works
+            </Link>
+            <Link href="#for-verifiers" className="block px-4 py-3 text-slate-300 hover:text-white rounded-lg hover:bg-white/5" onClick={() => setMobileMenuOpen(false)}>
+              For Verifiers
+            </Link>
+            <Link href="/verify" className="block px-4 py-3 text-slate-300 hover:text-white rounded-lg hover:bg-white/5" onClick={() => setMobileMenuOpen(false)}>
+              Verify User
             </Link>
             <Link href="/claims" className="block px-4 py-3 text-slate-300 hover:text-white rounded-lg hover:bg-white/5" onClick={() => setMobileMenuOpen(false)}>
               Dashboard
@@ -302,6 +314,186 @@ export default function Home() {
         </div>
       </section>
 
+      {/* For Verifiers / External Services Section */}
+      <section id="for-verifiers" className="py-24" style={{ background: '#0f1419' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+              <svg className="w-4 h-4" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>For Businesses & Services</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Integrate Identity Verification
+            </h2>
+            <div className="max-w-2xl mt-4 mx-auto">
+              <p className="text-slate-400 text-lg leading-relaxed">
+                External services can verify user attestations directly on Solana. No API keys required — just query the blockchain.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            {/* Left: Benefits */}
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                    <svg className="w-6 h-6" style={{ color: '#10b981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Instant Verification</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Query on-chain attestations in milliseconds. Check if a user has verified their age, nationality, or passed sanctions screening.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59, 130, 246, 0.15)' }}>
+                    <svg className="w-6 h-6" style={{ color: '#3b82f6' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Zero PII Exposure</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Never handle sensitive personal data. The blockchain only stores verification status, not passport details or birthdates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(168, 85, 247, 0.15)' }}>
+                    <svg className="w-6 h-6" style={{ color: '#a855f7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Simple Integration</h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      Just 3 lines of code to verify any wallet. Use our verification page or integrate directly with Solana Web3.js.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Code Example */}
+            <div className="p-6 rounded-2xl" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Quick Integration</h3>
+                <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                  Solana Web3.js
+                </span>
+              </div>
+              
+              <div className="rounded-xl p-4 mb-6 overflow-x-auto" style={{ background: '#0f1419' }}>
+                <pre className="text-sm font-mono">
+                  <code>
+                    <span style={{ color: '#7c3aed' }}>const</span>{' '}
+                    <span style={{ color: '#60a5fa' }}>PROGRAM_ID</span>{' '}
+                    <span style={{ color: '#94a3b8' }}>=</span>{'\n'}
+                    <span style={{ color: '#10b981' }}>&quot;FR6XtcAL...cGAkd8W0&quot;</span>;{'\n\n'}
+                    
+                    <span style={{ color: '#6b7280' }}>// Derive user&apos;s identity PDA</span>{'\n'}
+                    <span style={{ color: '#7c3aed' }}>const</span>{' '}
+                    <span style={{ color: '#60a5fa' }}>[identityPDA]</span>{' '}
+                    <span style={{ color: '#94a3b8' }}>=</span>{'\n'}
+                    {'  '}<span style={{ color: '#f59e0b' }}>PublicKey</span>
+                    <span style={{ color: '#94a3b8' }}>.</span>
+                    <span style={{ color: '#60a5fa' }}>findProgramAddressSync</span>
+                    <span style={{ color: '#94a3b8' }}>(</span>{'\n'}
+                    {'    '}[<span style={{ color: '#10b981' }}>&quot;identity&quot;</span>, userWallet],{'\n'}
+                    {'    '}PROGRAM_ID{'\n'}
+                    {'  '}<span style={{ color: '#94a3b8' }}>)</span>;{'\n\n'}
+
+                    <span style={{ color: '#6b7280' }}>// Fetch attestation status</span>{'\n'}
+                    <span style={{ color: '#7c3aed' }}>const</span>{' '}
+                    <span style={{ color: '#60a5fa' }}>account</span>{' '}
+                    <span style={{ color: '#94a3b8' }}>=</span>{' '}
+                    <span style={{ color: '#7c3aed' }}>await</span>{'\n'}
+                    {'  '}connection.<span style={{ color: '#60a5fa' }}>getAccountInfo</span>(identityPDA);{'\n\n'}
+
+                    <span style={{ color: '#6b7280' }}>// Check verification flags</span>{'\n'}
+                    <span style={{ color: '#94a3b8' }}>{'{'}</span>{'\n'}
+                    {'  '}<span style={{ color: '#60a5fa' }}>age_verified</span>: <span style={{ color: '#10b981' }}>true</span>,{'\n'}
+                    {'  '}<span style={{ color: '#60a5fa' }}>nationality_verified</span>: <span style={{ color: '#10b981' }}>true</span>{'\n'}
+                    <span style={{ color: '#94a3b8' }}>{'}'}</span>
+                  </code>
+                </pre>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link 
+                  href="/verify"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-center transition-all hover:scale-105"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)'
+                  }}
+                >
+                  🔍 Verify a User
+                </Link>
+                <a 
+                  href="https://github.com/Rahul-Prasad-07/Zassport#api-integration"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 px-6 py-3 rounded-xl font-semibold text-center text-slate-300 transition-all hover:text-white"
+                  style={{ 
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(148, 163, 184, 0.2)'
+                  }}
+                >
+                  📖 View Docs
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Use Cases */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl text-center" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+              <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(245, 158, 11, 0.15)' }}>
+                <span className="text-2xl">🎰</span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Gaming & Gambling</h3>
+              <p className="text-slate-400 text-sm">
+                Age verification for regulated gaming platforms without collecting birthdates
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl text-center" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+              <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(59, 130, 246, 0.15)' }}>
+                <span className="text-2xl">🏦</span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">DeFi & Finance</h3>
+              <p className="text-slate-400 text-sm">
+                Sanctions screening and nationality verification for compliant DeFi protocols
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl text-center" style={{ background: '#1a222d', border: '1px solid rgba(148, 163, 184, 0.1)' }}>
+              <div className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                <span className="text-2xl">🏛️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Network States</h3>
+              <p className="text-slate-400 text-sm">
+                Census and citizenship verification for digital-first jurisdictions
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Product Features */}
       <section className="py-24" style={{ background: '#0f1419' }}>
         <div className="max-w-7xl mx-auto px-6">
@@ -498,6 +690,9 @@ export default function Home() {
             <div className="flex items-center gap-6">
               <Link href="/claims" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
                 Dashboard
+              </Link>
+              <Link href="/verify" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
+                Verify
               </Link>
               <a href="https://github.com/Rahul-Prasad-07/Zassport" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
                 GitHub

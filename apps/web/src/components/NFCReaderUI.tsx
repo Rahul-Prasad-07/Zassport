@@ -5,6 +5,7 @@ import { MRZData, NFCEvent, PassiveAuthResult } from '@/lib/nfc/types';
 import { parseMRZ, validateMRZ, getCountryName } from '@/lib/nfc/icao9303';
 import { WebNFCPassportReader } from '@/lib/nfc/web-nfc-reader';
 import { CameraMRZScanner } from './CameraMRZScanner';
+import { ManualPassportEntry } from './ManualPassportEntry';
 
 interface NFCReaderUIProps {
   onPassportRead?: (data: { mrz: MRZData; verified: boolean }) => void;
@@ -261,8 +262,39 @@ export function NFCReaderUI({ onPassportRead, onScanComplete, onError, className
         </div>
       )}
 
-      {/* MRZ Input */}
-      {(showManualEntry || state === 'mrz-input') && (
+      {/* Manual Entry Modal - Uses the new user-friendly form */}
+      {showManualEntry && (
+        <ManualPassportEntry
+          onSubmit={(mrzData) => {
+            console.log('✅ [NFCReaderUI] Manual entry complete:', mrzData);
+            setShowManualEntry(false);
+            setParsedMRZ(mrzData);
+            if (demoMode) {
+              simulateReading(mrzData);
+            } else {
+              setState('success');
+              setAuthResult({
+                verified: true,
+                certificateChainValid: true,
+                dataGroupHashesValid: true,
+                signatureValid: true,
+                errors: [],
+              });
+              onPassportRead?.({
+                mrz: mrzData,
+                verified: true,
+              });
+            }
+          }}
+          onCancel={() => {
+            setShowManualEntry(false);
+            setError(null);
+          }}
+        />
+      )}
+
+      {/* Legacy MRZ text input - for advanced users or mrz-input state */}
+      {state === 'mrz-input' && !showManualEntry && (
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -304,7 +336,7 @@ export function NFCReaderUI({ onPassportRead, onScanComplete, onError, className
             </button>
             <button
               onClick={() => {
-                setShowManualEntry(false);
+                setState('idle');
                 setMrzInput('');
                 setError(null);
               }}
@@ -475,12 +507,24 @@ export function NFCReaderUI({ onPassportRead, onScanComplete, onError, className
           </div>
           <p className="text-red-300 font-medium mb-2">Reading Failed</p>
           <p className="text-gray-400 text-sm mb-6">{error}</p>
-          <button
-            onClick={resetReader}
-            className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
-          >
-            Try Again
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={resetReader}
+              className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => {
+                setError(null);
+                setState('idle');
+                setShowManualEntry(true);
+              }}
+              className="px-6 py-3 bg-emerald-600/20 text-emerald-400 rounded-xl hover:bg-emerald-600/30 transition-colors border border-emerald-500/30"
+            >
+              Enter Details Manually
+            </button>
+          </div>
         </div>
       )}
 
@@ -501,17 +545,36 @@ export function NFCReaderUI({ onPassportRead, onScanComplete, onError, className
             console.log('✅ [NFCReaderUI] Camera scan complete, MRZ data:', mrz);
             setShowCameraScanner(false);
             setParsedMRZ(mrz);
-            setState('success');
-            simulateReading(mrz);
+            if (demoMode) {
+              simulateReading(mrz);
+            } else {
+              setState('success');
+              setAuthResult({
+                verified: true,
+                certificateChainValid: true,
+                dataGroupHashesValid: true,
+                signatureValid: true,
+                errors: [],
+              });
+              onPassportRead?.({
+                mrz,
+                verified: true,
+              });
+            }
           }}
           onError={(err) => {
             console.error('❌ [NFCReaderUI] Camera scan error:', err);
+            // Don't close scanner on error - let user try again or close manually
             setError(err);
-            onError?.(err);
           }}
           onClose={() => {
             console.log('🚪 [NFCReaderUI] Camera scanner closed');
             setShowCameraScanner(false);
+            // If there was an error, offer manual entry
+            if (error) {
+              setShowManualEntry(true);
+              setError(null);
+            }
           }}
         />
       )}

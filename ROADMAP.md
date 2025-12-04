@@ -1,20 +1,31 @@
 # Zassport Development Roadmap
 
+> **Current Status**: ✅ **85% Complete** — Fully deployed and operational on Solana Devnet
+
+**Live Deployments**:
+- 🌐 Frontend: [https://zassport.vercel.app](https://zassport.vercel.app)
+- 🔐 Verifier: [https://zassport-verifier.onrender.com](https://zassport-verifier.onrender.com/health)
+- ⛓️ Program: [`FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ`](https://explorer.solana.com/address/FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ?cluster=devnet)
+
+---
+
 ## ✅ Phase 1: Smart Contract Foundation (COMPLETE)
 **Goal**: Build core Solana smart contracts for identity management
 
 ### Completed Tasks
 - [x] Set up Anchor project structure
-- [x] Define account structures (Identity, Proposal)
+- [x] Define account structures (Identity, VerifierConfig, Proposal)
 - [x] Implement `initialize` instruction
-- [x] Implement `register_identity` instruction
-- [x] Implement `update_reputation` instruction
+- [x] Implement `register_identity` instruction with Poseidon commitments
+- [x] Implement `attest_age_proof` with Ed25519 signature verification
+- [x] Implement `attest_nationality_proof` with Ed25519 signature verification
+- [x] Add nullifier registry (Sybil resistance)
 - [x] Create governance system (`create_proposal`, `cast_vote`)
 - [x] Add custom error types
-- [x] Write unit tests for all instructions
-- [x] Deploy to devnet
+- [x] Write unit tests for all instructions (10 passing)
+- [x] Deploy to Solana devnet
 
-**Smart Contract Address**: `5sCDzoF1pzHisqrrpmfbDynCdjgBJX9FcmVBvJzBio2V` (Devnet)
+**Deployed Program**: `FR6XtcALdJfPRTLzSyhjt5fJ1eoYsEn8kq4vcGAkd8WQ` (Devnet)
 
 ---
 

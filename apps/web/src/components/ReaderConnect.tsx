@@ -11,7 +11,10 @@ export function ReaderConnect() {
     let cancelled = false;
     const check = async () => {
       try {
-        const res = await fetch('http://localhost:3010/health', { cache: 'no-store' });
+        const res = await fetch('http://localhost:3010/health', { 
+          cache: 'no-store',
+          signal: AbortSignal.timeout(2000) // 2 second timeout
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!cancelled) {
@@ -21,7 +24,8 @@ export function ReaderConnect() {
       } catch (e: any) {
         if (!cancelled) {
           setStatus('unreachable');
-          setMessage(e?.message || 'Not reachable');
+          // Suppress console errors for expected failure when service isn't running
+          setMessage('Not running (optional)');
         }
       }
     };

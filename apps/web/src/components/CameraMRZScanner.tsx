@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { createWorker, Worker } from 'tesseract.js';
 import { MRZData } from '@/lib/nfc/types';
 import { parseMRZ } from '@/lib/nfc/icao9303';
+import { extractMRZLines, autoCorrectMRZ, validateMRZChecksums } from '@/lib/mrzOcrUtils';
 
 interface CameraMRZScannerProps {
   onMRZScanned: (mrz: MRZData) => void;
@@ -18,6 +19,8 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>('');
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [scanAttempts, setScanAttempts] = useState(0);
+  const [lastError, setLastError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -152,6 +155,33 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
     const mrzContext = mrzCanvas.getContext('2d');
     if (mrzContext) {
       mrzContext.putImageData(mrzImageData, 0, 0);
+      
+      // Apply image preprocessing for better OCR
+      // 1. Convert to grayscale and increase contrast
+      const processedData = mrzContext.getImageData(0, 0, mrzCanvas.width, mrzCanvas.height);
+      const data = processedData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        // Convert to grayscale
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        
+        // Apply contrast enhancement
+        const contrast = 1.5; // Increase contrast
+        const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+        const enhanced = factor * (gray - 128) + 128;
+        
+        // Apply threshold for binary image (better for OCR)
+        const threshold = 140;
+        const binary = enhanced > threshold ? 255 : 0;
+        
+        data[i] = binary;     // R
+        data[i + 1] = binary; // G
+        data[i + 2] = binary; // B
+        // Alpha stays the same
+      }
+      
+      mrzContext.putImageData(processedData, 0, 0);
+      console.log('🎨 [CameraScanner] Applied image preprocessing for OCR');
     }
 
     setStatus('Processing with OCR...');
@@ -177,7 +207,7 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
       const worker = workerRef.current;
       
       console.log('⚙️ [CameraScanner] Configuring Tesseract for MRZ...');
-      // Configure for MRZ recognition
+      // Configure for MRZ recognition - OCR-B font optimized
       await worker.setParameters({
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
       });
@@ -192,24 +222,36 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
       console.log('📝 [CameraScanner] OCR raw text:', text);
       console.log('📏 [CameraScanner] Text length:', text.length);
       
-      setProgress(90);
-      setStatus('Parsing MRZ data...');
+      setProgress(70);
+      setStatus('Processing MRZ data...');
 
-      // Clean and parse MRZ text
-      const lines = text
-        .split('\n')
-        .map(line => line.trim().replace(/\s/g, ''))
-        .filter(line => line.length > 30); // MRZ lines are typically 30-44 chars
+      // Use enhanced MRZ extraction with OCR correction
+      const mrzLines = extractMRZLines(text);
+      
+      console.log('📋 [CameraScanner] Extracted MRZ lines:', mrzLines);
 
-      console.log('📋 [CameraScanner] Filtered MRZ lines:', lines);
-      console.log('📊 [CameraScanner] Number of valid lines:', lines.length);
-
-      if (lines.length < 2) {
-        throw new Error('Could not detect MRZ. Please ensure passport is well-lit and MRZ is clearly visible.');
+      if (mrzLines.length < 2) {
+        throw new Error('Could not detect MRZ lines. Please ensure:\n• Passport is well-lit\n• MRZ is clearly visible\n• No glare on the surface');
       }
 
-      // Try to parse MRZ
-      const mrzLines = lines.slice(0, 3); // Take first 2-3 lines
+      setProgress(85);
+      setStatus('Validating MRZ...');
+
+      // Try to auto-correct line 2 based on check digits
+      if (mrzLines.length >= 2) {
+        const correctedLine2 = autoCorrectMRZ(mrzLines[1]);
+        if (correctedLine2 !== mrzLines[1]) {
+          console.log('🔧 [CameraScanner] Auto-corrected line 2');
+          mrzLines[1] = correctedLine2;
+        }
+        
+        // Validate checksums
+        const validation = validateMRZChecksums(mrzLines[1]);
+        if (!validation.valid) {
+          console.warn('⚠️ [CameraScanner] MRZ validation warnings:', validation.errors);
+        }
+      }
+
       console.log('🔍 [CameraScanner] Parsing MRZ lines:', mrzLines);
       
       const mrzData = parseMRZ(mrzLines);
@@ -218,6 +260,8 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
 
       setProgress(100);
       setStatus('MRZ detected successfully!');
+      setScanAttempts(0); // Reset on success
+      setLastError(null);
       
       // Wait a moment then callback
       setTimeout(() => {
@@ -231,6 +275,8 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
       
       const errorMsg = error.message || 'Failed to read MRZ. Please try again or enter manually.';
       setStatus(errorMsg);
+      setLastError(errorMsg);
+      setScanAttempts(prev => prev + 1);
       onError?.(errorMsg);
       setIsScanning(false);
     }
@@ -325,6 +371,26 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
         {/* Hidden canvas for image processing */}
         <canvas ref={canvasRef} className="hidden" />
 
+        {/* Error message after failed scan */}
+        {lastError && !isScanning && (
+          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm text-red-300 font-medium">Scan failed</p>
+                <p className="text-xs text-red-400/80 mt-1">{lastError}</p>
+                {scanAttempts >= 2 && (
+                  <p className="text-xs text-slate-400 mt-2">
+                    Having trouble? Try entering your passport details manually.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex items-center justify-between mt-6">
           <div className="flex-1">
@@ -342,7 +408,7 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
                 color: '#fff'
               }}
             >
-              Cancel
+              {scanAttempts >= 2 ? 'Enter Manually' : 'Cancel'}
             </button>
             <button
               onClick={captureAndProcess}
@@ -353,7 +419,7 @@ export function CameraMRZScanner({ onMRZScanned, onError, onClose }: CameraMRZSc
                 boxShadow: isScanning ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.4)'
               }}
             >
-              {isScanning ? 'Processing...' : 'Capture & Scan'}
+              {isScanning ? 'Processing...' : scanAttempts > 0 ? 'Try Again' : 'Capture & Scan'}
             </button>
           </div>
         </div>
