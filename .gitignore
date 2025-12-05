@@ -52,6 +52,8 @@ pkg/
 dist/
 generated/
 
+docs/
+
 # Logs, caches, temp
 *.log
 coverage/
