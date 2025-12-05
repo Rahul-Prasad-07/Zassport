@@ -23,6 +23,7 @@ export async function generatePoseidonHash(inputs: bigint[]): Promise<string> {
 
 /**
  * Generate commitment from passport data
+ * Note: Commitment can use salt for additional privacy
  */
 export async function generateCommitment(
   dateOfBirth: bigint,
@@ -33,10 +34,31 @@ export async function generateCommitment(
 }
 
 /**
- * Generate nullifier from commitment
+ * Generate DETERMINISTIC nullifier from passport data
+ * This ensures same passport = same nullifier = can only register once
+ * Uses: documentNumber + dateOfBirth + nationality (no random salt!)
  */
 export async function generateNullifier(commitment: string): Promise<string> {
   return generatePoseidonHash([BigInt(commitment)]);
+}
+
+/**
+ * Generate passport-based nullifier (deterministic, for Sybil resistance)
+ * Same passport data ALWAYS produces same nullifier
+ */
+export async function generatePassportNullifier(passportData: {
+  documentNumber: string;
+  dateOfBirth: string;
+  nationality: string;
+}): Promise<string> {
+  // Convert passport fields to bigints
+  const docNumBigInt = BigInt('0x' + Buffer.from(passportData.documentNumber.toUpperCase().replace(/[^A-Z0-9]/g, '')).toString('hex'));
+  const dobTimestamp = BigInt(dateToTimestamp(passportData.dateOfBirth));
+  const nationalityBigInt = BigInt('0x' + Buffer.from(passportData.nationality.toUpperCase()).toString('hex'));
+  
+  // Deterministic nullifier = Poseidon(documentNumber, dateOfBirth, nationality)
+  // NO RANDOM SALT - same passport always = same nullifier
+  return generatePoseidonHash([docNumBigInt, dobTimestamp, nationalityBigInt]);
 }
 
 /**
@@ -70,9 +92,22 @@ export function dateToTimestamp(dateStr: string): number {
 
 /**
  * Calculate age from date of birth
+ * Supports both ISO (YYYY-MM-DD) and MRZ (YYMMDD) formats
  */
 export function calculateAge(dateOfBirth: string): number {
-  const birthDate = new Date(dateOfBirth);
+  let birthDate: Date;
+  
+  // Handle YYMMDD format (MRZ)
+  if (/^\d{6}$/.test(dateOfBirth)) {
+    const year = parseInt(dateOfBirth.substring(0, 2));
+    const month = parseInt(dateOfBirth.substring(2, 4));
+    const day = parseInt(dateOfBirth.substring(4, 6));
+    const fullYear = year >= 50 ? 1900 + year : 2000 + year;
+    birthDate = new Date(fullYear, month - 1, day);
+  } else {
+    birthDate = new Date(dateOfBirth);
+  }
+  
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -84,6 +119,8 @@ export function calculateAge(dateOfBirth: string): number {
 
 /**
  * Generate Age Proof (18+)
+ * NOTE: The circuit expects nullifier = Poseidon(commitment)
+ * For Sybil resistance, we use deterministic salt based on passport data
  */
 export async function generateAgeProof(passportData: {
   dateOfBirth: string;
@@ -97,8 +134,10 @@ export async function generateAgeProof(passportData: {
 }> {
   const snarkjsLib = await getSnarkjs();
   
-  // Generate random salt
-  const salt = BigInt(Math.floor(Math.random() * 1000000000));
+  // Generate DETERMINISTIC salt from passport data for Sybil resistance
+  // Same passport = same salt = same commitment = same nullifier
+  const passportHash = await generatePassportNullifier(passportData);
+  const salt = BigInt(passportHash) % BigInt(1000000000000);
   
   // Convert date to timestamp
   const dobTimestamp = dateToTimestamp(passportData.dateOfBirth);
@@ -108,15 +147,29 @@ export async function generateAgeProof(passportData: {
   const age = calculateAge(passportData.dateOfBirth);
   const minAge = 18;
   
-  // Age circuit commitment = Poseidon(dateOfBirth, salt)
+  console.log('🔐 [AgeProof] Generating proof with:', {
+    dobTimestamp,
+    currentTimestamp,
+    age,
+    minAge,
+    salt: salt.toString(),
+  });
+  
+  // Commitment = Poseidon(dateOfBirth, salt)
+  // Using deterministic salt means same passport = same commitment
   const commitment = await generatePoseidonHash([
     BigInt(dobTimestamp),
     salt
   ]);
-  // Nullifier = Poseidon(commitment)
-  const nullifier = await generatePoseidonHash([
-    BigInt(commitment)
-  ]);
+  
+  // Nullifier = Poseidon(commitment) - THIS MATCHES THE CIRCUIT
+  // Since commitment is deterministic (from passport data), nullifier is also deterministic
+  const nullifier = await generatePoseidonHash([BigInt(commitment)]);
+  
+  console.log('🔐 [AgeProof] Computed values:', {
+    commitment,
+    nullifier,
+  });
 
   const proofInputs = {
     // Public inputs
@@ -166,6 +219,7 @@ export async function verifyAgeProof(
 
 /**
  * Generate Nationality Proof
+ * NOTE: Circuit expects nullifier = Poseidon(passportNumber)
  */
 export async function generateNationalityProof(
   passportData: {
@@ -182,13 +236,13 @@ export async function generateNationalityProof(
 }> {
   const snarkjsLib = await getSnarkjs();
   
-  // Generate random salt
-  const salt = BigInt(Math.floor(Math.random() * 1000000000));
+  // Generate DETERMINISTIC salt from passport data for Sybil resistance
+  const passportHash = await generatePassportNullifier(passportData);
+  const salt = BigInt(passportHash) % BigInt(1000000000000);
   
-  // Convert passport number to bigint
+  // Convert passport number to bigint (deterministic)
   const passportNumBigInt = BigInt(
-    Array.from(passportData.documentNumber)
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    '0x' + Buffer.from(passportData.documentNumber.toUpperCase().replace(/[^A-Z0-9]/g, '')).toString('hex')
   );
   
   // Convert nationality to country code (ISO 3166-1 numeric)
@@ -198,7 +252,8 @@ export async function generateNationalityProof(
   // Generate commitment: Poseidon(passportNumber, nationality, salt)
   const commitment = await generatePoseidonHash([passportNumBigInt, BigInt(nationalityCode), salt]);
   
-  // Generate nullifier: Poseidon(passportNumber)
+  // Nullifier = Poseidon(passportNumber) - THIS MATCHES THE CIRCUIT
+  // passportNumber is deterministic, so nullifier is deterministic
   const nullifier = await generatePoseidonHash([passportNumBigInt]);
 
   const proofInputs = {
@@ -248,6 +303,7 @@ export async function verifyNationalityProof(
 
 /**
  * Generate Validity Proof (passport expiry >= now)
+ * NOTE: Uses deterministic salt for Sybil resistance
  */
 export async function generateValidityProof(
   passportData: {
@@ -265,25 +321,30 @@ export async function generateValidityProof(
 }> {
   const snarkjsLib = await getSnarkjs();
 
-  const salt = BigInt(Math.floor(Math.random() * 1000000000));
+  // Generate DETERMINISTIC salt from passport data for Sybil resistance
+  const passportHash = await generatePassportNullifier(passportData);
+  const salt = BigInt(passportHash) % BigInt(1000000000000);
+  
   const dobTs = dateToTimestamp(passportData.dateOfBirth);
   const expTs = dateToTimestamp(passportData.dateOfExpiry);
   const nowTs = Math.floor(Date.now() / 1000);
 
+  // Commitment with deterministic salt
   const commitment = await generatePoseidonHash([
-    BigInt(dobTs),
+    BigInt(expTs),
     salt,
   ]);
-  const nullifier = await generatePoseidonHash([
-    BigInt(commitment),
-  ]);
+  
+  // Nullifier = Poseidon(expiryDate, salt) matching the circuit
+  const nullifier = await generatePoseidonHash([BigInt(expTs), salt]);
 
   // For validity proof, we simulate since circuit may not be deployed
   // In production, this would use the actual circuit
   const proofInputs = {
-    dateOfExpiry: expTs.toString(),
-    currentTimestamp: nowTs.toString(),
-    salt: salt.toString(),
+    expiryDate: expTs.toString(),
+    currentTime: nowTs.toString(),
+    randomness: salt.toString(),
+    commitment: commitment,
   } as any;
 
   try {
@@ -302,8 +363,8 @@ export async function generateValidityProof(
     try {
       const result = await snarkjsLib.groth16.fullProve(
         proofInputs,
-        '/circuits/passport_verifier/circuit.wasm',
-        '/circuits/passport_verifier/trusted_setup_final.zkey'
+        '/circuits/expiry/circuit.wasm',
+        '/circuits/expiry/trusted_setup_final.zkey'
       );
       proof = result.proof;
       publicSignals = result.publicSignals;

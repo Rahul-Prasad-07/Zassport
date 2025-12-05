@@ -274,19 +274,138 @@ export default function ClaimsWallet() {
   // Not connected state
   if (!publicKey) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f14' }}>
-        <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
-            <svg className="w-8 h-8" style={{ color: '#10b981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+      <div className="min-h-screen" style={{ background: '#0a0f14' }}>
+        {/* Header */}
+        <header className="sticky top-0 z-50" style={{ 
+          background: 'rgba(10, 15, 20, 0.9)', 
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.1)'
+        }}>
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex items-center justify-between h-16">
+              <Link href="/" className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <span className="text-lg font-semibold text-white">Zassport</span>
+              </Link>
+            </div>
           </div>
-          <h2 className="text-2xl font-semibold text-white mb-3">Connect Your Wallet</h2>
-          <p className="text-slate-400 mb-8">Connect a Solana wallet to generate and manage your identity proofs</p>
-          <WalletConnectButton />
-          <Link href="/" className="block mt-6 text-slate-500 hover:text-slate-300 text-sm transition-colors">
-            ← Back to Home
-          </Link>
+        </header>
+
+        {/* Main Content */}
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
+          <div className="max-w-lg w-full mx-6">
+            {/* Main Card */}
+            <div className="rounded-3xl p-8 md:p-10" style={{ 
+              background: 'linear-gradient(145deg, rgba(26, 34, 45, 0.9), rgba(15, 23, 32, 0.95))',
+              border: '1px solid rgba(148, 163, 184, 0.1)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}>
+              {/* Icon */}
+              <div className="w-20 h-20 mx-auto mb-8 rounded-2xl flex items-center justify-center" style={{ 
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1))',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                <svg className="w-10 h-10" style={{ color: '#10b981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-2xl md:text-3xl font-bold text-white text-center mb-3">
+                Connect Your Wallet
+              </h1>
+              <p className="text-slate-400 text-center mb-8 leading-relaxed">
+                Connect a Solana wallet to access your privacy-preserving identity dashboard
+              </p>
+
+              {/* Wallet Connect Button */}
+              <div className="flex justify-center mb-8">
+                <WalletConnectButton />
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="flex-1 h-px" style={{ background: 'rgba(148, 163, 184, 0.15)' }}></div>
+                <span className="text-xs text-slate-500 uppercase tracking-wider">Supported Wallets</span>
+                <div className="flex-1 h-px" style={{ background: 'rgba(148, 163, 184, 0.15)' }}></div>
+              </div>
+
+              {/* Wallet Icons */}
+              <div className="flex justify-center gap-6 mb-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(148, 163, 184, 0.1)' }}>
+                    <svg className="w-7 h-7" viewBox="0 0 128 128" fill="none">
+                      <circle cx="64" cy="64" r="64" fill="#AB9FF2"/>
+                      <path d="M110.584 64.9142H99.142C99.142 41.9249 80.3163 23.2493 57.142 23.2493C34.5535 23.2493 16.0461 41.0159 15.1425 63.3221C14.1824 87.0325 34.0758 107.249 57.8283 107.249H61.142C83.7326 107.249 102.193 90.1981 105.026 68.0853C105.238 66.3911 103.889 64.9142 102.179 64.9142H95.142C93.4852 64.9142 92.0938 66.2191 91.7999 67.8511C89.0341 83.0424 76.0116 94.2493 60.142 94.2493C42.2852 94.2493 27.4247 79.142 27.8461 61.2C28.2383 44.4055 42.2423 31.2493 59.142 31.2493C75.5091 31.2493 88.8093 43.6587 90.0699 59.6973C90.2127 61.5419 88.7066 64.9142 86.8555 64.9142H75.142C72.3806 64.9142 70.142 67.1528 70.142 69.9142C70.142 72.6757 72.3806 74.9142 75.142 74.9142H102.179C107.498 74.9142 111.893 70.2358 110.584 64.9142Z" fill="white"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs text-slate-500">Phantom</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(148, 163, 184, 0.1)' }}>
+                    <svg className="w-7 h-7" viewBox="0 0 101 88" fill="none">
+                      <path d="M100.48 69.3817L83.8068 86.8015C83.4444 87.1799 83.0058 87.4816 82.5185 87.6878C82.0312 87.894 81.5055 88.0003 80.9743 88H1.93563C1.55849 88 1.18957 87.8926 0.876747 87.6912C0.563927 87.4897 0.321243 87.2029 0.179439 86.8659C0.0376359 86.529 0.00286849 86.1566 0.0797537 85.7995C0.156639 85.4424 0.341687 85.1168 0.610557 84.8643L17.2839 67.4446C17.6462 67.0661 18.0848 66.7644 18.5721 66.5582C19.0594 66.352 19.5851 66.2458 20.1163 66.2458H99.1549C99.532 66.2458 99.901 66.3532 100.214 66.5546C100.527 66.7561 100.769 67.0429 100.911 67.3799C101.053 67.7168 101.088 68.0892 101.011 68.4463C100.934 68.8034 100.749 69.129 100.48 69.3817ZM83.8068 34.3032C83.4444 33.9248 83.0058 33.6231 82.5185 33.4169C82.0312 33.2107 81.5055 33.1045 80.9743 33.1048H1.93563C1.55849 33.1048 1.18957 33.2122 0.876747 33.4136C0.563927 33.6151 0.321243 33.9019 0.179439 34.2388C0.0376359 34.5758 0.00286849 34.9482 0.0797537 35.3053C0.156639 35.6624 0.341687 35.988 0.610557 36.2405L17.2839 53.6602C17.6462 54.0386 18.0848 54.3403 18.5721 54.5765C19.0594 54.8127 19.5851 54.9189 20.1163 54.9189H99.1549C99.532 54.9186 99.901 54.8112 100.214 54.6098C100.527 54.4083 100.769 54.1215 100.911 53.7845C101.053 53.4476 101.088 53.0752 101.011 52.7181C100.934 52.361 100.749 52.0354 100.48 51.7829L83.8068 34.3032ZM1.93563 21.7542H80.9743C81.5055 21.7542 82.0312 21.648 82.5185 21.4418C83.0058 21.2356 83.4444 20.9339 83.8068 20.5554L100.48 3.13569C100.749 2.88323 100.934 2.55762 101.011 2.20052C101.088 1.84342 101.053 1.47103 100.911 1.13407C100.769 0.79712 100.527 0.510347 100.214 0.308899C99.901 0.107451 99.532 0 99.1549 0H20.1163C19.5851 0 19.0594 0.106235 18.5721 0.312451C18.0848 0.518667 17.6462 0.820376 17.2839 1.19883L0.610557 18.6186C0.341687 18.8711 0.156639 19.1967 0.0797537 19.5538C0.00286849 19.9109 0.0376359 20.2833 0.179439 20.6202C0.321243 20.9572 0.563927 21.244 0.876747 21.4454C1.18957 21.6469 1.55849 21.7542 1.93563 21.7542Z" fill="url(#solana-gradient)"/>
+                      <defs>
+                        <linearGradient id="solana-gradient" x1="8.52" y1="90.0973" x2="88.99" y2="-2.36285" gradientUnits="userSpaceOnUse">
+                          <stop offset="0.08" stopColor="#9945FF"/>
+                          <stop offset="0.3" stopColor="#8752F3"/>
+                          <stop offset="0.5" stopColor="#5497D5"/>
+                          <stop offset="0.6" stopColor="#43B4CA"/>
+                          <stop offset="0.72" stopColor="#28E0B9"/>
+                          <stop offset="0.97" stopColor="#19FB9B"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  <span className="text-xs text-slate-500">Solflare</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(148, 163, 184, 0.1)' }}>
+                    <svg className="w-7 h-7 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-4h2v2h-2zm1.61-9.96c-2.06-.3-3.88.97-4.43 2.79-.18.58.26 1.17.87 1.17h.2c.41 0 .74-.29.88-.67.32-.89 1.27-1.5 2.3-1.28.95.2 1.65 1.13 1.57 2.1-.1 1.34-1.62 1.63-2.45 2.88 0 .01-.01.01-.01.02-.01.02-.02.03-.03.05-.09.15-.18.32-.25.5-.01.03-.03.05-.04.08-.01.02-.01.04-.02.07-.12.34-.2.75-.2 1.25h2c0-.42.11-.77.28-1.07.02-.03.03-.06.05-.09.08-.14.18-.27.28-.39.01-.01.02-.03.03-.04.1-.12.21-.23.33-.34.96-.91 2.26-1.65 1.99-3.56-.24-1.74-1.61-3.21-3.35-3.47z"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs text-slate-500">Others</span>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(16, 185, 129, 0.08)' }}>
+                  <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-sm text-slate-300">Zero-knowledge identity proofs</span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(59, 130, 246, 0.08)' }}>
+                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span className="text-sm text-slate-300">Your data never leaves your device</span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(168, 85, 247, 0.08)' }}>
+                  <svg className="w-5 h-5 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="text-sm text-slate-300">Powered by Solana blockchain</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Back Link */}
+            <div className="text-center mt-8">
+              <Link href="/" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-300 text-sm transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );

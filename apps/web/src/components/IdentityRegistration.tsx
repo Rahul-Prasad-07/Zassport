@@ -8,7 +8,6 @@ import * as anchor from '@coral-xyz/anchor';
 import { generateAgeProof, bigintTo32BytesBE } from '@/lib/zkProofsReal';
 import { useProgram } from '@/hooks/useProgram';
 import { getNullifierRegistryPDA, getIdentityPDA, PROGRAM_ID } from '@/lib/anchor';
-import { ReaderConnect } from '@/components/ReaderConnect';
 import { usePassportData, type PassportData } from '@/contexts/PassportDataContext';
 import { NFCReaderUI, type PassportData as NFCPassportData } from '@/components/NFCReaderUI';
 
@@ -63,6 +62,11 @@ export function IdentityRegistration() {
   useEffect(() => {
     if (publicKey && program) {
       checkIdentityExists();
+    } else {
+      // Clear registration state when wallet disconnects
+      setIdentityExists(false);
+      setIsRegistered(false);
+      setStatus('');
     }
   }, [publicKey, program]);
 
@@ -72,19 +76,28 @@ export function IdentityRegistration() {
     setChecking(true);
     try {
       const identityPDA = getIdentityPDA(publicKey);
-      const account = await connection.getAccountInfo(identityPDA);
+      console.log('🔍 Checking identity for wallet:', publicKey.toString());
+      console.log('🔍 Identity PDA:', identityPDA.toString());
       
-      if (account) {
+      const account = await connection.getAccountInfo(identityPDA);
+      console.log('🔍 Account info:', account ? 'EXISTS' : 'NOT FOUND');
+      
+      if (account && account.data && account.data.length > 0) {
+        console.log('✅ Identity account found on-chain');
         setIdentityExists(true);
         setIsRegistered(true);
         setStatus('✅ Identity already registered on-chain!');
       } else {
+        console.log('❌ No identity found - ready to register');
         setIdentityExists(false);
         setIsRegistered(false);
+        setStatus('');
       }
     } catch (e) {
-      console.log('No identity found - user needs to register');
+      console.log('❌ Error checking identity:', e);
       setIdentityExists(false);
+      setIsRegistered(false);
+      setStatus('');
     } finally {
       setChecking(false);
     }
@@ -217,7 +230,6 @@ export function IdentityRegistration() {
 
   return (
     <div className="space-y-6">
-      <ReaderConnect />
       <div className="text-center">
         <h3 className="text-2xl font-semibold text-white mb-2">
           Register Your ZK Identity

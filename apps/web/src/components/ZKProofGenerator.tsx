@@ -19,7 +19,14 @@ import { getNationalityCode, bigintTo32BytesBE } from '@/lib/zkProofsReal';
 export function ZKProofGenerator() {
   const { publicKey, connected } = useWallet();
   const program = useProgram();
-  const { passportData, isRegistered } = usePassportData();
+  const { 
+    passportData, 
+    isRegistered,
+    hasStoredData,
+    isLoadingStored,
+    loadStoredPassport,
+    savePassportToStorage 
+  } = usePassportData();
   
   const [proofType, setProofType] = useState<'age' | 'nationality' | 'validity' | 'sanctions'>('age');
   const [minAge, setMinAge] = useState<number>(18);
@@ -27,6 +34,32 @@ export function ZKProofGenerator() {
   const [result, setResult] = useState<string>('');
   const [proofResult, setProofResult] = useState<any>(null);
   const [lastPassportData, setLastPassportData] = useState<any>(null);
+  const [savingToStorage, setSavingToStorage] = useState(false);
+
+  // Handler for loading stored passport data
+  const handleLoadStoredPassport = async () => {
+    const success = await loadStoredPassport();
+    if (success) {
+      setResult('✅ Loaded passport data from encrypted storage!');
+    } else {
+      setResult('❌ Failed to load stored passport data. You may need to scan your passport again.');
+    }
+  };
+
+  // Handler for saving passport data to encrypted storage
+  const handleSaveToStorage = async () => {
+    setSavingToStorage(true);
+    try {
+      const success = await savePassportToStorage();
+      if (success) {
+        setResult('✅ Passport data saved to encrypted storage! You can now generate proofs after refreshing the page.');
+      } else {
+        setResult('❌ Failed to save passport data to storage.');
+      }
+    } finally {
+      setSavingToStorage(false);
+    }
+  };
 
   const generateProof = async () => {
     if (!connected) {
@@ -359,8 +392,38 @@ export function ZKProofGenerator() {
         
         {/* Data status indicator */}
         {passportData ? (
-          <div className="mt-4 inline-block px-4 py-2 bg-green-500/20 text-green-300 rounded-lg text-sm">
-            ✅ Using registered passport data ({passportData.nationality} passport)
+          <div className="mt-4 space-y-2">
+            <div className="inline-block px-4 py-2 bg-green-500/20 text-green-300 rounded-lg text-sm">
+              ✅ Using registered passport data ({passportData.nationality} passport)
+            </div>
+            {/* Save to storage button */}
+            {!hasStoredData && (
+              <button
+                onClick={handleSaveToStorage}
+                disabled={savingToStorage}
+                className="ml-2 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+              >
+                {savingToStorage ? '🔐 Saving...' : '💾 Save for Later'}
+              </button>
+            )}
+            {hasStoredData && (
+              <span className="ml-2 px-4 py-2 bg-slate-500/20 text-slate-300 rounded-lg text-sm">
+                💾 Data saved to storage
+              </span>
+            )}
+          </div>
+        ) : hasStoredData ? (
+          <div className="mt-4 space-y-2">
+            <div className="inline-block px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm">
+              📦 You have stored passport data available
+            </div>
+            <button
+              onClick={handleLoadStoredPassport}
+              disabled={isLoadingStored}
+              className="ml-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm hover:from-blue-500 hover:to-purple-500 transition-colors disabled:opacity-50"
+            >
+              {isLoadingStored ? '🔓 Decrypting...' : '🔓 Load Stored Passport'}
+            </button>
           </div>
         ) : (
           <div className="mt-4 inline-block px-4 py-2 bg-yellow-500/20 text-yellow-300 rounded-lg text-sm">
